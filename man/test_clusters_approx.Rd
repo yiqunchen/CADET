@@ -41,31 +41,31 @@ efficiency and reproducibility (when the clustering function is non-deterministi
 \item{clusters}{the estimated cluster assignments}
 }
 \description{
-This function performs a user-specified clustering method \code{cl_fun} on the rows of a 
-data matrix to obtain \code{K} clusters, and tests the null hypothesis of no difference in means 
+This function performs a user-specified clustering method \code{cl_fun} on the rows of a
+data matrix to obtain \code{K} clusters, and tests the null hypothesis of no difference in means
 between clusters \code{k1} and \code{k2}.
 }
 \details{
-In order to account for the fact that the clusters have been estimated from the data, 
-the p-values are computed conditional on the fact that those clusters were estimated. 
-This function approximates p-values via importance sampling. 
+In order to account for the fact that the clusters have been estimated from the data,
+the p-values are computed conditional on the fact that those clusters were estimated.
+This function approximates p-values via importance sampling.
 
-This function assumes that \code{cl_fun} takes a \eqn{n \times p} numeric data matrix as input 
+This function assumes that \code{cl_fun} takes a \eqn{n \times p} numeric data matrix as input
 and outputs integer assignments to clusters 1 through \code{K}.
 }
 \examples{
 # Simulates a 100 x 2 data set with three clusters
 set.seed(123)
-dat <- rbind(c(-1, 0), c(0, sqrt(3)), c(1, 0))[rep(1:3, length=100), ] + 
+dat <- rbind(c(-1, 0), c(0, sqrt(3)), c(1, 0))[rep(1:3, length=100), ] +
 matrix(0.2*rnorm(200), 100, 2)
 
 # Function to run k-means clustering w/ k = 3 and 50 random starts
-km_cluster <- function(X) { 
+km_cluster <- function(X) {
  km <- kmeans(X, 3, nstart=50)
  return(km$cluster)
 }
 
-# Cluster data using k-means 
+# Cluster data using k-means
 clusters <- km_cluster(dat)
 table(rep(1:3, length=100), clusters)
 
