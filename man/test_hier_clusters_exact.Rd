@@ -39,37 +39,37 @@ test_hier_clusters_exact(
 \item{trunc}{object of the type \code{Intervals} containing the conditioning set}
 }
 \description{
-This tests the null hypothesis of no difference in means between 
-clusters \code{k1} and \code{k2} at level \code{K} in a hierarchical clustering. 
-(The \code{K} clusters are numbered as per the results of the \code{cutree} 
+This tests the null hypothesis of no difference in means between
+clusters \code{k1} and \code{k2} at level \code{K} in a hierarchical clustering.
+(The \code{K} clusters are numbered as per the results of the \code{cutree}
 function in the \code{stats} package.)
 }
 \details{
-In order to account for the fact that the clusters have been estimated from the data, 
-the p-values are computed conditional on the fact that those clusters were estimated. 
-This function computes p-values exactly via an analytic characterization of the conditioning set. 
+In order to account for the fact that the clusters have been estimated from the data,
+the p-values are computed conditional on the fact that those clusters were estimated.
+This function computes p-values exactly via an analytic characterization of the conditioning set.
 
-Currently, this function supports squared Euclidean distance as a measure of dissimilarity 
-between observations, and the following six linkages: single, average, centroid, Ward, 
-McQuitty (also known as WPGMA), and median (also kown as WPGMC). 
+Currently, this function supports squared Euclidean distance as a measure of dissimilarity
+between observations, and the following six linkages: single, average, centroid, Ward,
+McQuitty (also known as WPGMA), and median (also kown as WPGMC).
 
-By default, this function assumes that the covariance matrix of the features is isotropic 
-i.e. \eqn{Cov(X_i) = \sigma^2 I_p}. Setting \code{iso} to \code{FALSE} instead assumes that 
-\eqn{Cov(X_i) = \Sigma}. If known, \eqn{\sigma} can be passed in using the \code{sigma} argument 
-or \eqn{\Sigma^{-1}} can be passed in the \code{SigInv} argument; otherwise, an 
+By default, this function assumes that the covariance matrix of the features is isotropic
+i.e. \eqn{Cov(X_i) = \sigma^2 I_p}. Setting \code{iso} to \code{FALSE} instead assumes that
+\eqn{Cov(X_i) = \Sigma}. If known, \eqn{\sigma} can be passed in using the \code{sigma} argument
+or \eqn{\Sigma^{-1}} can be passed in the \code{SigInv} argument; otherwise, an
 estimate of \eqn{\sigma} or \eqn{\Sigma} will be used.
 }
 \examples{
 # Simulates a 100 x 2 data set with three clusters
 set.seed(123)
-dat <- rbind(c(-1, 0), c(0, sqrt(3)), c(1, 0))[rep(1:3, length=100), ] + 
+dat <- rbind(c(-1, 0), c(0, sqrt(3)), c(1, 0))[rep(1:3, length=100), ] +
 matrix(0.2*rnorm(200), 100, 2)
 
 # Average linkage hierarchical clustering
 hcl <- hclust(dist(dat, method="euclidean")^2, method="average")
 
-# plot dendrograms with the 1st and 2nd clusters (cut at the third split) 
-# displayed in blue and orange 
+# plot dendrograms with the 1st and 2nd clusters (cut at the third split)
+# displayed in blue and orange
 plot(hcl)
 rect_hier_clusters(hcl, k=3, which=1:2, border=c("blue", "orange"))
 

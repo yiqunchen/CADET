@@ -4,7 +4,18 @@
 \alias{test_hier_clusters_exact_1f}
 \title{Exact significance test (with respect to a single feature) for hierarchical clustering}
 \usage{
-test_hier_clusters_exact_1f(X, link, hcl, K, k1, k2, feat, sig = NULL)
+test_hier_clusters_exact_1f(
+  X,
+  link,
+  hcl,
+  K,
+  k1,
+  k2,
+  feat,
+  indpt = TRUE,
+  sig = NULL,
+  covMat = NULL
+)
 }
 \arguments{
 \item{X}{\eqn{n} by \eqn{p} matrix containing numeric data.}
@@ -19,7 +30,11 @@ test_hier_clusters_exact_1f(X, link, hcl, K, k1, k2, feat, sig = NULL)
 
 \item{feat}{Integer selecting the feature to test.}
 
-\item{sig}{Optional scalar specifying \eqn{\sigma}.}
+\item{indpt}{Boolean. If \code{TRUE}, assume independent features, otherwise not.}
+
+\item{sig}{Optional scalar specifying \eqn{\sigma}, relevant if \code{ind} is \code{TRUE}.}
+
+\item{covMat}{Optional matrix specifying \eqn{\Sigma}, relevant if \code{ind} is \code{FALSE}.}
 }
 \value{
 \item{stat}{the test statistic: the absolute difference between the mean of feature \code{feat} in cluster \code{k1} and the mean of feature \code{feat} in cluster \code{k2}}
@@ -27,40 +42,44 @@ test_hier_clusters_exact_1f(X, link, hcl, K, k1, k2, feat, sig = NULL)
 \item{trunc}{object of the type \code{Intervals} containing the conditioning set}
 }
 \description{
-This tests the null hypothesis of no difference in means in the mean of 
-feature \code{feat} between clusters \code{k1} and \code{k2} at  
-level \code{K} in a hierarchical clustering. (The \code{K} clusters are 
-numbered as per the results of the \code{cutree} function in the 
+This tests the null hypothesis of no difference in means in the mean of
+feature \code{feat} between clusters \code{k1} and \code{k2} at
+level \code{K} in a hierarchical clustering. (The \code{K} clusters are
+numbered as per the results of the \code{cutree} function in the
 \code{stats} package.)
 }
 \details{
-In order to account for the fact that the clusters have been estimated from the data, 
-the p-values are computed conditional on the fact that those clusters were estimated. 
-This function computes p-values exactly via an analytic characterization of the conditioning set. 
+In order to account for the fact that the clusters have been estimated from the data,
+the p-values are computed conditional on the fact that those clusters were estimated.
+This function computes p-values exactly via an analytic characterization of the conditioning set.
 
-Currently, this function supports squared Euclidean distance as a measure of dissimilarity 
-between observations, and the following six linkages: single, average, centroid, Ward, 
-McQuitty (also known as WPGMA), and median (also kown as WPGMC). 
+Currently, this function supports squared Euclidean distance as a measure of dissimilarity
+between observations, and the following six linkages: single, average, centroid, Ward,
+McQuitty (also known as WPGMA), and median (also kown as WPGMC).
 
-This function assumes that the covariance matrix of the features is isotropic 
-i.e. \eqn{Cov(X_i) = \sigma^2 I_p}. If known, \eqn{\sigma} can be passed in using the \code{sigma} 
-argument; otherwise, an estimate of \eqn{\sigma} will be used.
+By default, this function assumes that the features are independent. If known,
+the variance of feature \code{feat} (\eqn{\sigma}) can be passed in using the
+\code{sigma} argument; otherwise, an estimate of \eqn{\sigma} will be used.
+
+Setting \code{ind} to \code{FALSE} allows the features to be dependent, i.e.
+\eqn{Cov(X_i) = \Sigma}. If known, \eqn{\Sigma} can be passed in using the \code{covMat} argument;
+otherwise, an estimate of \eqn{\Sigma} will be used.
 }
 \examples{
 # Simulates a 100 x 2 data set with three clusters
 set.seed(123)
-dat <- rbind(c(-1, 0), c(0, sqrt(3)), c(1, 0))[rep(1:3, length=100), ] + 
+dat <- rbind(c(-1, 0), c(0, sqrt(3)), c(1, 0))[rep(1:3, length=100), ] +
 matrix(0.2*rnorm(200), 100, 2)
 
 # Average linkage hierarchical clustering
 hcl <- hclust(dist(dat, method="euclidean")^2, method="average")
 
-# plot dendrograms with the 1st and 2nd clusters (cut at the third split) 
-# displayed in blue and orange 
+# plot dendrograms with the 1st and 2nd clusters (cut at the third split)
+# displayed in blue and orange
 plot(hcl)
 rect_hier_clusters(hcl, k=3, which=1:2, border=c("blue", "orange"))
 
-# tests for a difference in means between the blue and orange clusters 
+# tests for a difference in means between the blue and orange clusters
 # with respect to the 1st feature
 test_hier_clusters_exact_1f(X=dat, link="average", hcl=hcl, K=3, k1=1, k2=2, feat=1)
 

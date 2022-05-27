@@ -89,6 +89,7 @@ solve_one_ineq <- function(A, B, C, tol=1e-10) {
   if(roots[1] > tol) {
     return(c(0, roots[1], roots[2], Inf))
   }
+<<<<<<< HEAD
 
   return(c(roots[2], Inf))
 }
@@ -209,7 +210,7 @@ solve_one_ineq_complement <- function(A, B, C, tol=1e-10) {
   #warning("Edge case for quadratic inequality solver!")
   #return(c(-Inf,Inf))
 }
-'#' Represent <x'(phi)_i, x'(phi)_j> as a quadratic function in phi ----
+#' Represent <x\'(phi)_i, x\'(phi)_j> as a quadratic function in phi ----
   #' @keywords internal
   #'
   #' @param X, matrix n by p
@@ -534,19 +535,7 @@ solve_one_ineq_1f <- function(A, B, C, tol = 1e-10) {
     }
   }
 
-  # now we know A !=0 & disc > 0
-  negB2A <- -B/(2*A)
-  rtDisc2A <- sqrt(disc)/(2*A)
-  # two real roots s.t. root1 < root2
-  roots <- sort(c(negB2A - rtDisc2A, negB2A + rtDisc2A))
-
-  if (A > tol) { # parabola open upwards
-    return(roots)
-  }
-
-  # now we know A < 0 & disc > 0
-  # parabola open downwards
-  return(c(-Inf, roots[1], roots[2], Inf))
+  return(c(roots[2], Inf))
 }
 
 # ----- functions for computing truncation sets -----
@@ -4823,6 +4812,7 @@ compute_S_median_gencov <- function(X, hcl, K, k1, k2, stat) {
   S <- intervals::interval_complement(S_complement, check_valid=FALSE)
   return(S)
 }
+<<<<<<< HEAD
 
 # ----- diff in means between a single feature -----
 #' Computes the conditioning set S for single linkage hierarchical clustering,
@@ -7021,4 +7011,3 @@ compute_S_median_1f <- function(X, hcl, K, k1, k2, feat) {
 
   return(S)
 }
-

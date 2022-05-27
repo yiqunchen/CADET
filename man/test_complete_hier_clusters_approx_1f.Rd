@@ -36,30 +36,30 @@ test_complete_hier_clusters_approx_1f(
 \item{stderr}{standard error of the p-value estimate}
 }
 \description{
-This tests the null hypothesis of no difference in means in the mean of 
-feature \code{feat} between clusters \code{k1} and \code{k2} at  
+This tests the null hypothesis of no difference in means in the mean of
+feature \code{feat} between clusters \code{k1} and \code{k2} at
 level \code{K} in a complete linkage hierarchical clustering. (The \code{K}
-clusters are  numbered as per the results of the \code{cutree} function in the 
+clusters are  numbered as per the results of the \code{cutree} function in the
 \code{stats} package.)
 }
 \details{
-Important note: Before calling \code{hclust} and this function, make sure to 
-load the package \code{fastcluster}. This is because the p-value approximation 
-procedure requires running hierarchical clustering on a large number of simulated 
+Important note: Before calling \code{hclust} and this function, make sure to
+load the package \code{fastcluster}. This is because the p-value approximation
+procedure requires running hierarchical clustering on a large number of simulated
 data sets, and the version of \code{hclust} in the \code{fastcluster} package
-is much faster than the version of \code{hclust} in \code{stats}.  
+is much faster than the version of \code{hclust} in \code{stats}.
 
-In order to account for the fact that the clusters have been estimated from the data, 
-the p-values are computed conditional on the fact that those clusters were estimated. 
-This function approximates p-values via importance sampling. 
+In order to account for the fact that the clusters have been estimated from the data,
+the p-values are computed conditional on the fact that those clusters were estimated.
+This function approximates p-values via importance sampling.
 
-Currently, this function supports squared Euclidean distance as a measure of dissimilarity 
-between observations. (Note that complete linkage is invariant under monotone transformations 
-of the measure of dissimilarity between observations, so unsquared Euclidean distance 
+Currently, this function supports squared Euclidean distance as a measure of dissimilarity
+between observations. (Note that complete linkage is invariant under monotone transformations
+of the measure of dissimilarity between observations, so unsquared Euclidean distance
 would produce the same hierarchical clustering.)
 
-This function assumes that the covariance matrix of the features is isotropic 
-i.e. \eqn{Cov(X_i) = \sigma^2 I_p}. If known, \eqn{\sigma} can be passed in using the \code{sigma} 
+This function assumes that the covariance matrix of the features is isotropic
+i.e. \eqn{Cov(X_i) = \sigma^2 I_p}. If known, \eqn{\sigma} can be passed in using the \code{sigma}
 argument; otherwise, an estimate of \eqn{\sigma} will be used.
 }
 \examples{
@@ -71,12 +71,12 @@ dat <-  matrix(rnorm(200), 100, 2)
 library(fastcluster)
 hcl <- hclust(dist(dat, method="euclidean")^2, method="complete")
 
-# plot dendrograms with the 1st and 2nd clusters (cut at the third split) 
-# displayed in blue and orange 
+# plot dendrograms with the 1st and 2nd clusters (cut at the third split)
+# displayed in blue and orange
 plot(hcl)
 rect_hier_clusters(hcl, k=3, which=1:2, border=c("blue", "orange"))
 
-# Monte Carlo test for a difference in means between the blue and orange clusters 
+# Monte Carlo test for a difference in means between the blue and orange clusters
 # wrt the 2nd feature
 test_complete_hier_clusters_approx_1f(X=dat, hcl=hcl,
 K=3, k1=1, k2=2, feat=2, ndraws=1000)
