@@ -89,8 +89,6 @@ solve_one_ineq <- function(A, B, C, tol=1e-10) {
   if(roots[1] > tol) {
     return(c(0, roots[1], roots[2], Inf))
   }
-<<<<<<< HEAD
-
   return(c(roots[2], Inf))
 }
 
@@ -210,16 +208,17 @@ solve_one_ineq_complement <- function(A, B, C, tol=1e-10) {
   #warning("Edge case for quadratic inequality solver!")
   #return(c(-Inf,Inf))
 }
+
 #' Represent <x\'(phi)_i, x\'(phi)_j> as a quadratic function in phi ----
-  #' @keywords internal
-  #'
-  #' @param X, matrix n by p
-  #' @param v, contrast vector n by 1
-  #' @param i, first index
-  #' @param j, second index
-  #'
-  #' @return parameters: a, b, c the coefficients of the quadratic equation such that (ax^2 + bx + c <= 0)
-  #'
+#' @keywords internal
+#'
+#' @param X, matrix n by p
+#' @param v, contrast vector n by 1
+#' @param i, first index
+#' @param j, second index
+#'
+#' @return parameters: a, b, c the coefficients of the quadratic equation such that (ax^2 + bx + c <= 0)
+#'
 inner_product_phi <- function(X, v, i, j){
     v_norm <- norm_vec(v)
     XTv <- t(X)%*%v
@@ -261,8 +260,6 @@ norm_sq_phi <- function(X, v, XTv, XTv_norm, dir_XTv, v_norm, i, j){
                     "constant"= as.numeric(constant_coef))
   return(coef_list)
 }
-
-
 
 
 #' Represent <x'(phi)_i, x'(phi)_j> as a quadratic function in phi ----
@@ -4829,7 +4826,6 @@ compute_S_median_gencov <- function(X, hcl, K, k1, k2, stat) {
   S <- intervals::interval_complement(S_complement, check_valid=FALSE)
   return(S)
 }
-<<<<<<< HEAD
 
 # ----- diff in means between a single feature -----
 #' Computes the conditioning set S for single linkage hierarchical clustering,
