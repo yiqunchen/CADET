@@ -282,13 +282,12 @@ kmeans_inference_1f <- structure(function(X, k, cluster_1, cluster_2,
 
   }
 
-  p_naive <-
+  p_naive <- pnorm() #
   # improve numerical stability
   final_interval_TN <- intervals::interval_union(final_interval_TN,
                                                     intervals::Intervals_full(c(test_stats-(1e-09),
                                                                                 test_stats+(1e-09))),
                                                     check_valid=FALSE)
-
   # update pval at the end of the day
   # is this calc... correct tho?
   if(test_stats > 0) {
