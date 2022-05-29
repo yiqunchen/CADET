@@ -15,7 +15,7 @@ norm_vec <- function(x) {
 #'
 #' @keywords internal
 #'
-#' @param x input to check 
+#' @param x input to check
 #' @param a lower
 #' @param b upper
 #'
@@ -32,7 +32,7 @@ is_integer_between_a_b <- function(x, a, b) {
 #' @param cl2 the second clustering
 #' @param K the number of clusters
 #'
-#' @return Returns TRUE if they are the same, and FALSE otherwise 
+#' @return Returns TRUE if they are the same, and FALSE otherwise
 same_cl <- function(cl1, cl2, K) {
   tab <- table(cl1, cl2)
   sum(tab != 0) == K
@@ -44,15 +44,23 @@ same_cl <- function(cl1, cl2, K) {
 #'
 #' @param cl clustering of x
 #' @param cl_phi clustering of x'(phi)
-#' @param k1,k2 index of clusters involved in the test 
+#' @param k1,k2 index of clusters involved in the test
 #'
-#' @return Returns TRUE if Ck, Ck' in C(x'(phi)), and FALSE otherwise 
+#' @return Returns TRUE if Ck, Ck' in C(x'(phi)), and FALSE otherwise
 preserve_cl <- function(cl, cl_phi, k1, k2) {
   tab <- table(cl, cl_phi)
-  
+
   k1_in <- (sum(tab[k1, ] != 0) == 1) & (sum(tab[, k1] != 0) == 1)
   k2_in <- (sum(tab[k2, ] != 0) == 1) & (sum(tab[, k2] != 0) == 1)
 
   k1_in & k2_in
+}
+
+
+naive.two.sided.pval <- function(z, mean, sd){
+  first_side <- pnorm(abs(z), mean =  mean, sd=sd, lower.tail = F)
+  second_side <- pnorm(-1*abs(z), mean =  mean, sd=sd,lower.tail = T)
+  two_sided_p_val <- first_side+second_side
+  return(two_sided_p_val)
 }
 
