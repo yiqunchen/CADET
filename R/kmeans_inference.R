@@ -298,7 +298,7 @@ kmeans_inference_1f <- structure(function(X, k, cluster_1, cluster_2,
       TNSurv(-test_stats, 0, sqrt(scale_factor), intervals::Intervals(as.matrix(-final_interval_TN)[, 2:1]))
   }
 
-  result_list <- list("final_interval"=final_interval_chisq,
+  result_list <- list("final_interval"=final_interval_TN,
                       "final_cluster" = estimated_final_cluster,
                       "test_stat"=test_stats,
                       "cluster_1" = cluster_1,

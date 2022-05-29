@@ -189,24 +189,6 @@ solve_one_ineq_complement <- function(A, B, C, tol=1e-10) {
 
   return(c(-Inf, roots[2]))
 
-  # Parabola opens up? (A > 0?)
-  # if(A > tol) {
-  #
-  #   if(roots[1] > tol){
-  #     return()
-  #   }
-  #
-  #   interval_result <- matrix(c(-Inf,roots[1], roots[2], Inf),
-  #                             ncol=2, byrow = T)
-  #
-  #   return(interval_result)
-  # }else{
-  #   return(roots)
-  # }
-
-  # if everything fails -- then we do not have a solution
-  #warning("Edge case for quadratic inequality solver!")
-  #return(c(-Inf,Inf))
 }
 
 #' Represent <x\'(phi)_i, x\'(phi)_j> as a quadratic function in phi ----

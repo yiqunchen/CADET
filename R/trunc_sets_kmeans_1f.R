@@ -1,4 +1,82 @@
 
+# ----- functions for solving quadratic inequalities -----
+#' Solve the roots of quadratic polynomials related to testing for a difference in means
+#'
+#' Solves \eqn{ax^2 + bx + c \le 0}, then returns the complement of the solution set
+#' wrt to the real line, unless the complement is empty, in which case
+#' the function returns NA.
+#'
+#' @keywords internal
+#'
+#' @param A, B, C the coefficients of the quadratic equation.
+#' @param tol if \eqn{|a|}, \eqn{|b|}, or \eqn{|c|} is not larger than tol, then treat it as zero.
+#'
+#' @return Returns an "Intervals" object containing NA or the complement of the solution set.
+solve_one_ineq_complement_1f <- function(A, B, C, tol=1e-10) {
+  # Computes the complement of the set {phi: B*phi + C <=  0},
+  compute_linear_ineq_complement_1f <- function(B, C, tol=1e-8) {
+    #  If B = 0
+    if(abs(B) <= tol) {
+      if(C <= tol) { # C <= 0: inequality is always satisfied
+        return(c(0,0)) # all of real line
+      } else { # C > 0: something has gone wrong -- no solution works
+        warning("B = 0 and C > 0: B*phi + C <= 0 has no solution")
+        return(c(-Inf,Inf)) # do not return any value
+      }
+    }
+
+    # If B \neq 0
+    ratio <- -C/B
+    # If B > 0:
+    if(B > tol) {
+      return(c(ratio,Inf))
+    }
+    if(B < tol) {
+      return(c(-Inf, ratio))
+    }
+  }
+
+  # A = 0?
+  if(abs(A) <= tol) {
+    return(compute_linear_ineq_complement_1f(B, C, tol))
+  }
+
+  # We know A \neq 0
+  discrim <- B^2 - 4*A*C
+
+  # If discriminant is small, we assume there is no root
+  if(discrim <= tol) {
+    if(A > tol) { # Parabola opens up: there is no solution
+      return(c(-Inf,Inf))
+    } else { # Parabola opens down: every x is a solution
+      return(c(0, 0))
+    }
+  }
+
+  # We now know that A =/= 0, and that there are two roots
+  # we compute the roots using the suggestion outlined at
+  # https://people.csail.mit.edu/bkph/articles/Quadratics.pdf
+  # for numerical stability purposes
+  sqrt_discrim <- sqrt(discrim)
+  if (B >= tol){
+    root_1 <- (-B-sqrt_discrim)/(2*A)
+    root_2 <- (2*C)/(-B-sqrt_discrim)
+    #roots <- sort(c(root_1, root_2))
+  }else{
+    root_1 <- (-B+sqrt_discrim)/(2*A)
+    root_2 <- (2*C)/(-B+sqrt_discrim)
+    #roots <- sort(c(root_1, root_2))
+  }
+
+  if(A > tol) {
+    return(c(-Inf, min(root_1,root_2), max(root_1,root_2), Inf))
+    } else {
+    # We now know that there are two roots, and parabola opens down (A < 0)
+    return(c(min(root_1,root_2), max(root_1,root_2)))
+  }
+
+}
+
 #' Represent ||x'(phi)_i-x'(phi)_j||_2^2 as a quadratic function of phi
 #' when we're testing for a difference in means wrt a single feature  ----
 #' @keywords internal
@@ -23,9 +101,9 @@ norm_sq_phi_kmeans_1f <- function(X, v, diff_means_feat, v_norm, i, j,
   # compute quadratic coef
 
   quad_coef <- (v[i]-v[j])^2/(v_norm)^4*(scaledSigRow_2_norm)^2
-  linear_coef <- 2*((((v[i]-v[j])/v_norm^2)*(X[i,]-X[j,])%*%scaledSigRow) -
-                      ((v[i]-v[j])/v_norm^2)^2*diff_means_feat*scaledSigRow_2_norm)
-  constant_vec <- X[i,]-X[j,]-(v[i]-v[j])*diff_means_feat/(v_norm^2)*scaledSigRow
+  linear_coef <- 2*( ((v[i]-v[j])/(v_norm^2)*(X[i,]-X[j,])%*%scaledSigRow) -
+                      ((v[i]-v[j])/v_norm^2)^2*(diff_means_feat)*(scaledSigRow_2_norm^2))
+  constant_vec <- X[i,]-X[j,]-(v[i]-v[j])*(diff_means_feat)/(v_norm^2)*scaledSigRow
   constant_coef <- sum(constant_vec*constant_vec)
   coef_list <- list("quad" = as.numeric(quad_coef), "linear" = as.numeric(linear_coef),
                     "constant"= as.numeric(constant_coef))
@@ -47,9 +125,10 @@ norm_sq_phi_kmeans_1f <- function(X, v, diff_means_feat, v_norm, i, j,
 #' @param scaledSigRow_2_norm ell_2 norm of the vector scaledSigRow
 #'
 #' @return parameters: a, b, c the coefficients of the quadratic equation such that (ax^2 + bx + c <= 0)
-#'
+#' @export
 norm_phi_canonical_kmeans_1f <- function(X, last_centroids, diff_means_feat, v_norm,
-                                         cl, k, v, i, weighted_v_i, feat, scaledSigRow, scaledSigRow_2_norm){
+                                         cl, k, v, i, weighted_v_i, feat,
+                                         scaledSigRow, scaledSigRow_2_norm){
   # compute quad coef
   v_i_expression <- (v[i]-weighted_v_i[k])/(v_norm^2)
   #X_current <- X[indicator_location,]
@@ -58,7 +137,7 @@ norm_phi_canonical_kmeans_1f <- function(X, last_centroids, diff_means_feat, v_n
   quad_coef <- (v_i_expression*scaledSigRow_2_norm)^2 # updated
   # compute lienar coef
   linear_coef_part_1 <- v_i_expression*(x_i_expression%*%scaledSigRow) # updated
-  linear_coef_part_2 <- (v_i_expression)^2*diff_means_feat*(scaledSigRow_2_norm)^2
+  linear_coef_part_2 <- (v_i_expression)^2*(diff_means_feat)*(scaledSigRow_2_norm^2)
   linear_coef <- 2*(linear_coef_part_1-linear_coef_part_2)
 
   constant_vec <- x_i_expression - c(v_i_expression)*diff_means_feat*scaledSigRow
@@ -109,7 +188,7 @@ kmeans_compute_S_1f_iso <- function(X, estimated_k_means, all_T_clusters,
                                               feat, scaledSigRow, scaledSigRow_2_norm)
 
       curr_quad <- minus_quad_ineq(j_star_quad, current_j_quad)
-      curr_interval <- solve_one_ineq_complement(curr_quad$quad,
+      curr_interval <- solve_one_ineq_complement_1f(curr_quad$quad,
                                                  curr_quad$linear,
                                                  curr_quad$constant)
       all_interval_lists[[(i-1)*length(init_list)+j]] <- curr_interval
@@ -155,8 +234,8 @@ kmeans_compute_S_1f_iso <- function(X, estimated_k_means, all_T_clusters,
                                                            feat, scaledSigRow, scaledSigRow_2_norm)
 
             curr_quad <- minus_quad_ineq(k_star_quad, k_current_quad)
-            curr_interval <- solve_one_ineq_complement((Sig_Inv_factor)^2*curr_quad$quad,
-                                                       (Sig_Inv_factor)*curr_quad$linear,
+            curr_interval <- solve_one_ineq_complement_1f(curr_quad$quad,
+                                                       curr_quad$linear,
                                                        curr_quad$constant)
             # interval update
             all_interval_lists[[curr_len+curr_counter]] <- curr_interval
@@ -216,7 +295,7 @@ kmeans_compute_S_1f_genCov <- function(X, estimated_k_means, all_T_clusters,
                                               i,init_list[j],
                                               feat, scaledSigRow, scaledSigRow_2_norm)
       curr_quad <- minus_quad_ineq(j_star_quad, current_j_quad)
-      curr_interval <- solve_one_ineq_complement(curr_quad$quad,
+      curr_interval <- solve_one_ineq_complement_1f(curr_quad$quad,
                                                  curr_quad$linear,
                                                  curr_quad$constant)
       all_interval_lists[[(i-1)*length(init_list)+j]] <- curr_interval
@@ -262,8 +341,8 @@ kmeans_compute_S_1f_genCov <- function(X, estimated_k_means, all_T_clusters,
                                                            feat, scaledSigRow, scaledSigRow_2_norm)
 
             curr_quad <- minus_quad_ineq(k_star_quad, k_current_quad)
-            curr_interval <- solve_one_ineq_complement((Sig_Inv_factor)^2*curr_quad$quad,
-                                                       (Sig_Inv_factor)*curr_quad$linear,
+            curr_interval <- solve_one_ineq_complement_1f(curr_quad$quad,
+                                                       curr_quad$linear,
                                                        curr_quad$constant)
             # interval update
             all_interval_lists[[curr_len+curr_counter]] <- curr_interval
@@ -281,8 +360,6 @@ kmeans_compute_S_1f_genCov <- function(X, estimated_k_means, all_T_clusters,
                                                  check_valid=FALSE)
 
   final_interval_chisq <- intervals::interval_complement(final_interval_complement)
-  #intervals::interval_intersection(intervals::Intervals(c(0,Inf)),
-  #                                 final_interval)
   return(final_interval_chisq)
 
 }
