@@ -282,7 +282,7 @@ kmeans_inference_1f <- structure(function(X, k, cluster_1, cluster_2,
 
   }
 
-  p_naive <- pnorm() #
+  p_naive <- NA #
   # improve numerical stability
   final_interval_TN <- intervals::interval_union(final_interval_TN,
                                                     intervals::Intervals_full(c(test_stats-(1e-09),
@@ -297,7 +297,6 @@ kmeans_inference_1f <- structure(function(X, k, cluster_1, cluster_2,
     pval <-  TNSurv(-test_stats, 0, sqrt(scale_factor), final_interval_TN) +
       TNSurv(-test_stats, 0, sqrt(scale_factor), intervals::Intervals(as.matrix(-final_interval_TN)[, 2:1]))
   }
-
 
   result_list <- list("final_interval"=final_interval_chisq,
                       "final_cluster" = estimated_final_cluster,
