@@ -288,7 +288,7 @@ kmeans_inference_1f <- structure(function(X, k, cluster_1, cluster_2,
                                  mean = 0,
                                  sd = sqrt(scale_factor))
   # improve numerical stability
-  final_interval_TN <- intervals::interval_union(final_interval_TN,
+  final_interval_TN <- intervals::interval_union(as(final_interval_TN, "Intervals_full"),
                                                     intervals::Intervals_full(c(test_stats-(1e-09),
                                                                                 test_stats+(1e-09))),
                                                     check_valid=FALSE)
