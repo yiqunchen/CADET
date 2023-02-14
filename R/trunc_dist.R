@@ -204,7 +204,7 @@ TNProb <- function(E) {
 #'
 #' @references Bryc, Wlodzimierz. "A uniform approximation to the right normal tail integral."
 #'     Applied mathematics and computation 127.2 (2002): 365-374.
-TNSurv <- function(q, mean, sd, E, approx = FALSE) {
+TNSurv <- function(q, mean, sd, E, approx = FALSE, return_all_prob = FALSE) {
   # check if truncation is empty (i.e. truncated to the empty set)
   if (nrow(E) == 0) {
     stop("truncation set is empty")
@@ -262,7 +262,16 @@ TNSurv <- function(q, mean, sd, E, approx = FALSE) {
 
   res <- num / denom
   # force the result to lie in [0, 1]
-  return(max(0, min(1, res)))
+  res <- max(0, min(1, res))
+  num <- max(0, min(1, num))
+  denom <- max(0, min(1, denom))
+
+  if(return_all_prob){
+    result <- list(res, num, denom)
+  }else{
+    result <- res
+  }
+  return(result)
 }
 
 # ----- Part 2: Truncated Chi Distribution -----
@@ -325,3 +334,56 @@ TChisqRatioApprox <- function(df, E1, E2) {
   # now we want P(Z in E1) / P(Z in E2), Z ~ N(0, 1)
   return(TNRatioApprox(E1, E2))
 }
+
+
+#' Compute normalization constant truncated normal distribution
+#'
+#' This function returns the normalization constant of a truncated normal distribution
+#' with a given set  \eqn{E}.
+#'
+#' Let \eqn{X} be a normal random variable with \code{mean} and \code{sd}. Truncating
+#'     \eqn{X} to the set \eqn{E} is equivalent to conditioning on \eqn{{X \in E}}.
+#' This function computes \eqn{P(X \in E)}.
+#'
+#' @keywords internal
+#'
+#' @param mean the mean parameter
+#' @param sd the standard deviation
+#' @param E the truncation set, an "Intervals" object or a matrix where rows represents
+#'     a union of disjoint intervals.
+#' @param approx should the approximation algorithm be used? Default is \code{FALSE},
+#'     where the approximation is not used in the first place. But when the result is wacky,
+#'     the approximation will be used.
+#'
+#' @return This function returns the value of the survival function evaluated at quantile \code{q}.
+#'
+#' @references Bryc, Wlodzimierz. "A uniform approximation to the right normal tail integral."
+#'     Applied mathematics and computation 127.2 (2002): 365-374.
+TNNormalize <- function(mean, sd, E, approx = FALSE) {
+  # check if truncation is empty (i.e. truncated to the empty set)
+  if (nrow(E) == 0) {
+    stop("truncation set is empty")
+  }
+
+  # check if truncation is the whole real line
+  if (isSameIntervals(E, intervals::Intervals(c(-Inf, Inf)))) {
+    return(1.0)
+  }
+
+  # E is not empty and is not the whole real line,
+  # i.e. 0 < P(X in E) < 1
+
+  # we want P(X in E)
+  E <- (E-mean)/sd
+  mean <- 0
+  sd <- 1
+  # check if the result is 0 or 1
+  if(nrow(E) == 0) return(0)
+  # transform region and E so that intervals have positive endpoints
+  E <- sortE(E)
+  # try exact calculation
+  denom <- TNProb(E)
+  # force the result to lie in [0, 1]
+  return(max(0, min(1, denom)))
+}
+

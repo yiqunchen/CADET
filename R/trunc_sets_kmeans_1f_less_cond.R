@@ -103,16 +103,27 @@ norm_sq_phi_kmeans_1f_less_cond <- function(X, v, a, B,
                                             scaledSigRow_2_norm,UPsi){
   # avoid repeated computation
   # compute quadratic coef
-
+  # TODO: yiqunc -- this is for
+  #verify_vec <- X[i,]+v[i]*scaledSigRow/(v_norm^2)*diff_means_feat+
+  # c(UPsi[i]-X[i,feat]+a[i]/a_norm^2*mean_feat+(B[i,]%*%BXj))*scaledSigRow
+  #if(!all.equal(verify_vec,X[i,])){
+  # cat(i,'\n')
+  # cat(X[i,],'\n')
+  # cat(verify_vec,'\n')
+  #  stop('wrong vec representation! check your phi and psi!!')
+  #}
   # the quadratic part stays the same!
   quad_coef <- (v[i]-v[j])^2/(v_norm)^4*(scaledSigRow_2_norm)^2
+  # cat((B[i,]-B[j,])%*%BXj,'(B[i,]-B[j,])%*%BXj','\n')
   # this part has some major changes
-  linear_coef <- 2*((v[i]-v[j])/(v_norm^2)*(scaledSigRow_2_norm^2))*
-    ((UPsi[i]-UPsi[j])-(X[i,feat]-X[j,feat])+(a[i]-a[j])/a_norm*mean_feat+
+  linear_coef_part_1 <- 2*((v[i]-v[j])/(v_norm^2)*(scaledSigRow_2_norm^2))*
+    ((UPsi[i]-UPsi[j])-(X[i,feat]-X[j,feat])+(a[i]-a[j])/(a_norm^2)*mean_feat+
        ((B[i,]-B[j,])%*%BXj))
-
-  constant_vec <- X[i,]-X[j,]-((UPsi[i]-UPsi[j])-
-      (X[i,feat]-X[j,feat])+(a[i]-a[j])/a_norm*mean_feat+((B[i,]-B[j,])%*%BXj))*scaledSigRow
+  linear_coef_part_2 <- 2*(v[i]-v[j])/(v_norm^2)*((X[i,]-X[j,])%*%scaledSigRow)
+  linear_coef <- linear_coef_part_1 + linear_coef_part_2
+  # changing - to + after x_i - x_j
+  constant_vec <- (X[i,]-X[j,])+c((UPsi[i]-UPsi[j])-
+      (X[i,feat]-X[j,feat])+(a[i]-a[j])/(a_norm^2)*mean_feat+((B[i,]-B[j,])%*%BXj))*scaledSigRow
 
   # compute 2 norm squared based on the constant vec
   constant_coef <- sum(constant_vec*constant_vec)
@@ -150,22 +161,24 @@ norm_phi_canonical_kmeans_1f_less_cond <- function(X, last_centroids,
   v_i_expression <- (v[i]-weighted_v_i[k])/(v_norm^2)
   x_i_expression <- X[i,] - last_centroids[k,]
   UPsi_i_expression <- UPsi[i]-weighted_UPsi[k]
-  B_i_expression <- B[i,]-weighted_B[k,]
-  x_ij_expression <- X[i,j]-weighted_xj[k]
+  #cat(dim(weighted_B),'dim weight B','\n')
+  #cat(dim(B),'dim B','\n')
+  B_i_expression <- B[i,]-weighted_B[[k]]
+  x_ij_expression <- X[i,feat]-weighted_xj[k]
   a_i_expression <- a[i]-weighted_a[k]
   # n_k and class k
   quad_coef <- (v_i_expression*scaledSigRow_2_norm)^2 # updated, same as before
   # compute lienar coef
   linear_coef_multipler <- 2*v_i_expression*(scaledSigRow_2_norm^2)
   linear_coef_part_1 <- UPsi_i_expression-x_ij_expression
-  linear_coef_part_2 <- (a_i_expression/a_norm*mean_feat)+(B_i_expression%*%BXj)
-  linear_coef <- linear_coef_multipler*(linear_coef_part_1+linear_coef_part_2)
+  linear_coef_part_2 <- (a_i_expression/(a_norm^2)*mean_feat)+(B_i_expression%*%BXj)
+  linear_coef_part_3 <- 2*v_i_expression*(x_i_expression%*%scaledSigRow)
+  linear_coef <- linear_coef_multipler*(linear_coef_part_1+linear_coef_part_2)+linear_coef_part_3
   # compute constant vec
-  constant_vec_part_2 <- (UPsi_i_expression-x_ij_expression+
-                            (a_i_expression/a_norm*mean_feat)+(B_i_expression%*%BXj))
-  constant_vec <- x_i_expression - constant_vec_part_2 %*% scaledSigRow
+  constant_vec_part_2 <- c(UPsi_i_expression-x_ij_expression+
+                            (a_i_expression/(a_norm^2)*mean_feat)+(B_i_expression%*%BXj))
+  constant_vec <- x_i_expression + constant_vec_part_2 * scaledSigRow
   constant_coef <- sum(constant_vec*constant_vec)
-
   coef_list <- list("quad" = as.numeric(quad_coef), "linear" = as.numeric(linear_coef),
                     "constant"= as.numeric(constant_coef))
   return(coef_list)
@@ -318,6 +331,7 @@ kmeans_compute_S_1f_genCov_less_cond  <-
     current_j_prime <- init_cluster[i]
     j_star_quad <- norm_sq_phi_kmeans_1f_less_cond(X=X, v=v_vec,
                                                    a=a_vec, B=B,
+                                                   BXj = t(B)%*%X[,feat],
                                                    mean_feat=mean_feat,
                                                    diff_means_feat=diff_means_feat,
                                                    feat=feat,
@@ -331,6 +345,7 @@ kmeans_compute_S_1f_genCov_less_cond  <-
     for (j in c(1:length(init_list))){
       current_j_quad <- norm_sq_phi_kmeans_1f_less_cond(X=X, v=v_vec,
                                             a=a_vec, B=B,
+                                            BXj = t(B)%*%X[,feat],
                                             mean_feat=mean_feat,
                                             diff_means_feat=diff_means_feat,
                                             feat=feat,
@@ -345,10 +360,12 @@ kmeans_compute_S_1f_genCov_less_cond  <-
       curr_interval <- solve_one_ineq_complement_1f(curr_quad$quad,
                                                     curr_quad$linear,
                                                     curr_quad$constant)
+      if((curr_interval[1]==-Inf)&(curr_interval[2]==Inf)){
+        cat()
+      }
       all_interval_lists[[(i-1)*length(init_list)+j]] <- curr_interval
     }
   }
-
   # keep track of the list elements
   curr_len <- length(all_interval_lists)
   curr_counter <- 1
@@ -360,7 +377,6 @@ kmeans_compute_S_1f_genCov_less_cond  <-
       # get pre-computed centroids
       # this is just the weighted version for x_i
       last_centroids <- all_T_centroids[[(l+1)]] # k by q matrix
-
       weighted_v_i_all_k <- rep(0, times=k)
       weighted_a <- rep(0, times=k)
       weighted_xj <- rep(0, times=k)
@@ -408,6 +424,7 @@ kmeans_compute_S_1f_genCov_less_cond  <-
                                                 scaledSigRow_2_norm=scaledSigRow_2_norm,
                                                 UPsi=UPsi,
                                                 B=B,
+                                                BXj = t(B)%*%X[,feat],
                                                 a=a_vec,
                                                 a_norm=a_norm,
                                                 weighted_UPsi=weighted_UPsi,
@@ -435,6 +452,7 @@ kmeans_compute_S_1f_genCov_less_cond  <-
                                                  scaledSigRow_2_norm=scaledSigRow_2_norm,
                                                  UPsi=UPsi,
                                                  B=B,
+                                                 BXj = t(B)%*%X[,feat],
                                                  a=a_vec,
                                                  a_norm=a_norm,
                                                  weighted_UPsi=weighted_UPsi,
