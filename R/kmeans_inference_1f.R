@@ -380,7 +380,7 @@ kmeans_inference_1f <- structure(function(X, k, cluster_1, cluster_2,
 kmeans_inference_1f_less_cond <- structure(function(X, k, cluster_1, cluster_2,
                                           feat, iso=FALSE, sig=NULL, covMat=NULL,
                                           iter.max = 10, seed = 1234,
-                                          tol_eps = 1e-6, n_mc_sim = 100,
+                                          tol_eps = 1e-6, n_mc_sim = 1,
                                           verbose=TRUE){
 
   set.seed(seed)
@@ -456,31 +456,28 @@ kmeans_inference_1f_less_cond <- structure(function(X, k, cluster_1, cluster_2,
   # compute test_stat in the isotropic case
   # this should be n-n1-n2
   Psi_observed <- t(U) %*% X[,feat]
-  # n_sim by n-n1-n2
-  Psi_matrix <- matrix(rnorm(n=n_sim*(dim(Psi_observed)[1]),
+  # n_mc_sim by n-n1-n2
+  Psi_matrix <- matrix(rnorm(n=n_mc_sim*(dim(Psi_observed)[1]),
                               mean=0,sd=sqrt(diag(covMat[feat,feat]))),
-                       nrow=(n_sim), byrow = T)
+                       nrow=(n_mc_sim), byrow = T)
   # n by 1
   UPsi_observed <- U %*% Psi_observed
   UPsi_simulated_mat <- U %*% t(Psi_matrix)
+  # hard code in the observed value
+  UPsi_simulated_mat[,1] <- UPsi_observed
   if(!is.null(sig)){
     test_stats <- diff_means_feat
     scale_factor <- squared_norm_nu*sig^2
     # compute S
-
     final_interval_TN <- kmeans_compute_S_1f_iso_less_cond(X, estimated_k_means, all_T_clusters,
                                                  all_T_centroids,n, diff_means_feat,
                                                  v_vec,v_norm, T_length, k,
                                                  feat, sig^2)
-
-    # update p naive
-    # p_naive <- multivariate_Z_test(X, estimated_final_cluster, cluster_1, cluster_2, sig)
-
   }
 
   # compute test_stats in the general cov case
 
-  if(!is.null(covMat)){
+  if(!is.null(covMat) ){
 
     test_stats <- diff_means_feat
 
@@ -509,41 +506,16 @@ kmeans_inference_1f_less_cond <- structure(function(X, k, cluster_1, cluster_2,
                                       scaledSigRow=scaledSigRow,
                                       scaledSigRow_2_norm=scaledSigRow_2_norm,
                                       UPsi=UPsi_observed)
-  }
-  #P_E_vec <- rep(NA, times = n_mc_sim)
-  #P_
-  final_pval <- list()
-  for (i in c(1:n_mc_sim)){
-    # store the final intervals
-    curr_final_interval <- kmeans_compute_S_1f_genCov_less_cond(X=X,
-                                                              estimated_k_means=estimated_k_means,
-                                                              all_T_clusters=all_T_clusters,
-                                                              all_T_centroids=all_T_centroids,
-                                                              n=n,
-                                                              diff_means_feat=diff_means_feat,
-                                                              mean_feat = mean_feat,
-                                                              v_vec=v_vec,
-                                                              v_norm=v_norm,
-                                                              a_vec=a_vec,
-                                                              a_norm=a_norm,
-                                                              B=B,
-                                                              T_length=T_length,
-                                                              k=k,
-                                                              feat=feat,
-                                                              scaledSigRow=scaledSigRow,
-                                                              scaledSigRow_2_norm=scaledSigRow_2_norm,
-                                                              UPsi=UPsi_simulated_mat[,i])
-    # if we have that... we still need to figure out
-    # TODO
-    curr_final_interval <- intervals::interval_union(as(curr_final_interval, "Intervals_full"),
-                              intervals::Intervals_full(c(test_stats-(1e-09),
-                                                          test_stats+(1e-09))),
-                              check_valid=FALSE)
-    if(test_stats > 0) {
-      pull_pvals_part_1 <- TNSurv(test_stats, 0, sqrt(scale_factor), final_interval_TN)
-      pull_pvals_part_2 <- TNSurv(test_stats, 0, sqrt(scale_factor),
-                                  intervals::Intervals(as.matrix(-final_interval_TN)[, 2:1]))
 
+    # improve numerical stability
+    final_interval_TN <- intervals::interval_union(as(final_interval_TN, "Intervals_full"),
+                                                   intervals::Intervals_full(c(test_stats-(1e-09),
+                                                                               test_stats+(1e-09))),
+                                                   check_valid=FALSE)
+    # update pval at the end of the day
+    # is this calc... correct tho? -- yes but only for mu = 0
+    # cat('Prob_E',Prob_E,'\n')
+    if(test_stats > 0) {
       pval <-  TNSurv(test_stats, 0, sqrt(scale_factor), final_interval_TN) +
         TNSurv(test_stats, 0, sqrt(scale_factor),
                intervals::Intervals(as.matrix(-final_interval_TN)[, 2:1]))
@@ -553,29 +525,83 @@ kmeans_inference_1f_less_cond <- structure(function(X, k, cluster_1, cluster_2,
                intervals::Intervals(as.matrix(-final_interval_TN)[, 2:1]))
     }
 
-  }
+  # TODO: clean them up later
+  final_pval_num <- list()
+  final_pval_denom <- list()
+  final_intervals <- list()
+  # this is the for loop that gives us more pvals
+  pval_weighted <- NULL
+  if (n_mc_sim > 1){
 
+    for (i in c(1:n_mc_sim)){
+      # store the final intervals
+      curr_final_interval <- kmeans_compute_S_1f_genCov_less_cond(X=X,
+                                        estimated_k_means=estimated_k_means,
+                                        all_T_clusters=all_T_clusters,
+                                        all_T_centroids=all_T_centroids,
+                                        n=n,
+                                        diff_means_feat=diff_means_feat,
+                                        mean_feat = mean_feat,
+                                        v_vec=v_vec,
+                                        v_norm=v_norm,
+                                        a_vec=a_vec,
+                                        a_norm=a_norm,
+                                        B=B,
+                                        T_length=T_length,
+                                        k=k,
+                                        feat=feat,
+                                        scaledSigRow=scaledSigRow,
+                                        scaledSigRow_2_norm=scaledSigRow_2_norm,
+                                        UPsi=UPsi_simulated_mat[,i])
+
+      # we have stored the final interval!
+      # but for monte carlo purposes, we actually need ratio of average
+      # rathe than average of ratio
+      # TODO
+      # list(res, num, denom)
+      final_intervals[[i]] <- curr_final_interval
+      curr_final_interval <- intervals::interval_union(as(curr_final_interval,
+                                                          "Intervals_full"),
+        intervals::Intervals_full(c(test_stats-(1e-09), test_stats+(1e-09))),
+                                                       check_valid=FALSE)
+
+      # we use abs() to pull two cases together
+      pull_pvals_part_1 <- TNSurv(abs(test_stats), 0, sqrt(scale_factor),
+                                  curr_final_interval, return_all_prob=TRUE)
+      # remember to 1- later
+      pull_pvals_part_2 <- TNSurv(-1*abs(test_stats), 0, sqrt(scale_factor),
+                                    curr_final_interval,
+                                    return_all_prob=TRUE)
+      if ((length(pull_pvals_part_1)==3)&(length(pull_pvals_part_2)==3)){
+        final_pval_num[[i]] <- pull_pvals_part_1[[2]]+
+          (pull_pvals_part_2[[3]]-pull_pvals_part_2[[2]])
+        final_pval_denom[[i]] <- pull_pvals_part_1[[3]]
+      }
+
+      if ((length(pull_pvals_part_1)==1)&(length(pull_pvals_part_2)==3)){
+        final_pval_num[[i]] <- (pull_pvals_part_2[[3]]-pull_pvals_part_2[[2]])
+        final_pval_denom[[i]] <- pull_pvals_part_2[[3]]
+      }
+
+      if ((length(pull_pvals_part_1)==3)&(length(pull_pvals_part_2)==1)){
+        final_pval_num[[i]] <- pull_pvals_part_1[[2]]
+        final_pval_denom[[i]] <- pull_pvals_part_1[[3]]
+      }
+    }
+    # ready to compute the weighted pval
+    final_pval_denom <- unlist(final_pval_denom)
+    final_pval_num <- unlist(final_pval_num)
+    valid_index <- (final_pval_denom!=0)&(final_pval_num<=final_pval_denom)
+    pval_weighted = sum(final_pval_num[valid_index])/sum(final_pval_denom[valid_index])
+    if (is.nan(pval_weighted)){
+      # if we get invalid result, let's just draw a value
+      pval_weighted <- runif(1,0,1)
+    }
+  }
+}
   p_naive <- naive.two.sided.pval(z = test_stats,
                                   mean = 0,
                                   sd = sqrt(scale_factor))
-  # improve numerical stability
-  final_interval_TN <- intervals::interval_union(as(final_interval_TN, "Intervals_full"),
-                                                 intervals::Intervals_full(c(test_stats-(1e-09),
-                                                                             test_stats+(1e-09))),
-                                                 check_valid=FALSE)
-  # update pval at the end of the day
-  # is this calc... correct tho? -- yes but only for mu = 0
-  Prob_E <- TNNormalize(0, sqrt(scale_factor), final_interval_TN)
-  # cat('Prob_E',Prob_E,'\n')
-  if(test_stats > 0) {
-    pval <-  TNSurv(test_stats, 0, sqrt(scale_factor), final_interval_TN) +
-      TNSurv(test_stats, 0, sqrt(scale_factor),
-             intervals::Intervals(as.matrix(-final_interval_TN)[, 2:1]))
-  } else {
-    pval <-  TNSurv(-test_stats, 0, sqrt(scale_factor), final_interval_TN) +
-      TNSurv(-test_stats, 0, sqrt(scale_factor),
-             intervals::Intervals(as.matrix(-final_interval_TN)[, 2:1]))
-  }
 
   result_list <- list("final_interval"=final_interval_TN,
                       "final_cluster" = estimated_final_cluster,
@@ -588,7 +614,12 @@ kmeans_inference_1f_less_cond <- structure(function(X, k, cluster_1, cluster_2,
                       "scale_factor" = scale_factor,
                       "p_naive" = p_naive,
                       "pval" = pval,
-                      "call" = match.call())
+                      "call" = match.call(),
+                      "temp_final_pval_num" = final_pval_num,
+                      "temp_final_pval_denom" = final_pval_denom,
+                      "sim_final_intervals" = final_intervals,
+                      "pval_weighted" = pval_weighted,
+                      "n_mc_sim" = n_mc_sim)
   class(result_list) <- "kmeans_inference"
   return(result_list)
 
