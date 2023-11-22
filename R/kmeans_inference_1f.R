@@ -7,7 +7,7 @@
 #' @param seed Random seed for the initialization in k-means clustering algorithm.
 #'
 #' @details
-#' For best rendering of the equations, visit https://yiqunchen.github.io/KmeansInference/reference/index.html.
+#' For best rendering of the equations, visit https://yiqunchen.github.io/CADET/reference/index.html.
 #'
 #' The data X is clustered by k-means clustering, which aims to partition the points into k groups such that the sum of squares from points
 #' to the assigned cluster centers is minimized. In other words, k-means clustering solves
@@ -29,7 +29,7 @@
 #' \item \code{objective} The objective function at the final iteration of k-means algorithm.
 #' }
 #' @examples
-#' library(KmeansInference)
+#' library(CADET)
 #' library(ggplot2)
 #' set.seed(2022)
 #' n <- 150
@@ -162,7 +162,7 @@ kmeans_estimation <- function(X, k, iter.max = 10, seed = 1234,
 #' @export
 #'
 #' @details
-#' For better rendering of the equations, visit https://yiqunchen.github.io/KmeansInference/reference/index.html.
+#' For better rendering of the equations, visit https://yiqunchen.github.io/CADET/reference/index.html.
 #'
 #' Consider the generative model \eqn{X ~ MN(\mu,I_n,\sigma^2 I_q)}. First recall that k-means clustering
 #' solves the following optimization problem

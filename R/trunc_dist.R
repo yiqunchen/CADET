@@ -199,6 +199,9 @@ TNProb <- function(E) {
 #' @param approx should the approximation algorithm be used? Default is \code{FALSE},
 #'     where the approximation is not used in the first place. But when the result is wacky,
 #'     the approximation will be used.
+#' @param return_all_prob whether we are returning only the final conditional
+#' probability (\code{FALSE}), or the numerator and denominator as well (\code{TRUE}).
+#' Default is \code{FALSE} and should not set to be true unless for debugging purposes.
 #'
 #' @return This function returns the value of the survival function evaluated at quantile \code{q}.
 #'
