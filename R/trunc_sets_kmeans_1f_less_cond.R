@@ -202,9 +202,10 @@ norm_phi_canonical_kmeans_1f_less_cond <- function(X, last_centroids,
 #' @return Returns an "Intervals" object containing the conditioning set.
 #'
 kmeans_compute_S_1f_iso_less_cond <- function(X, estimated_k_means,
-                                                      all_T_clusters,
+                                    all_T_clusters,
                                     all_T_centroids,
-                                    n, diff_means_feat, v_vec,v_norm, T_length, k,
+                                    n, diff_means_feat,
+                                    v_vec,v_norm, T_length, k,
                                     feat, sigma_2_feat){
 
   scaledSigRow <- rep(0,ncol(X))
