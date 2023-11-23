@@ -67,8 +67,7 @@
 #' In Proceedings of the Fifth Berkeley Symposium on Mathematical Statistics and Probability,
 #' pp. 281–297. Berkeley, CA: University of California Press.
 #' @export
-kmeans_estimation <- function(X, k, iter.max = 10, seed = 1234,
-                              tol_eps = 1e-4, verbose=TRUE){
+kmeans_estimation <- function(X, k, iter.max = 10, seed = 1234){
 
   # credit: https://stackoverflow.com/questions/59679046/speed-challenge-any-faster-method-to-calculate-distance-matrix-between-rows-of
   # user: F. Privé
@@ -140,14 +139,13 @@ kmeans_estimation <- function(X, k, iter.max = 10, seed = 1234,
 #' @param k Integer; the number of clusters for k-means clustering
 #' @param cluster_1,cluster_2 Two different integers in {1,...,k}; two estimated clusters to test, as indexed by the results of
 #' \code{kmeans_estimation}.
+#' @param feat Integer selecting the feature to test.
 #' @param iso Boolean. If TRUE, an isotropic covariance matrix model is used.
 #' @param sig Numeric; noise standard deviation for the observed data, a non-negative number;
 #' relevant if \code{iso}=TRUE. If it's not given as input, a median-based estimator will be by default (see Section 4.2 of our manuscript).
 #' @param covMat Numeric matrix; if \code{iso} is FALSE, *required* \eqn{q} by \eqn{q} matrix specifying \eqn{\Sigma}.
 #' @param iter.max Positive integer; 	the maximum number of iterations allowed in k-means clustering algorithm. Default to \code{10}.
 #' @param seed Random seed for the initialization in k-means clustering algorithm.
-#' @param tol_eps A small number specifying the convergence criterion for k-means clustering,
-#' default to \code{1e-6}.
 #'
 #' @return Returns a list with the following elements:
 #' \itemize{
@@ -189,8 +187,7 @@ kmeans_estimation <- function(X, k, iter.max = 10, seed = 1234,
 #'
 kmeans_inference_1f <- structure(function(X, k, cluster_1, cluster_2,
                                        feat, iso=FALSE, sig=NULL, covMat=NULL,
-                                       iter.max = 10, seed = 1234,
-                                       tol_eps = 1e-6, verbose=TRUE){
+                                       iter.max = 10, seed = 1234){
 
   set.seed(seed)
   if(!is.matrix(X)) stop("X should be a matrix")
@@ -224,7 +221,7 @@ kmeans_inference_1f <- structure(function(X, k, cluster_1, cluster_2,
   n <- dim(X)[1]
   p <- dim(X)[2]
   # get the list of all assigned clusters first
-  estimated_k_means <- kmeans_estimation(X, k, iter.max, seed, tol_eps, verbose)
+  estimated_k_means <- kmeans_estimation(X, k, iter.max, seed)
   # check if we get the desired number of clusters:
   if(length(unique(estimated_k_means$final_cluster))<k){
     stop("k-means clustering did not return the desired number of clusters! Try a different seed?")
@@ -318,317 +315,3 @@ kmeans_inference_1f <- structure(function(X, k, cluster_1, cluster_2,
   return(result_list)
 
 })
-
-# ----- main function to test equality of the means of two estimated clusters via k-means clustering -----
-#' Test for a difference in means between clusters of observations
-#' identified via k-means clustering (less conditioning)
-#'
-#' This function tests the null hypothesis of no difference in means between
-#' output by k-means clustering. The clusters are numbered as per the results of
-#' the \code{kmeans_estimation} function in the \code{CADET} package.
-#' @param X Numeric matrix; \eqn{n} by \eqn{q} matrix of observed data
-#' @param k Integer; the number of clusters for k-means clustering
-#' @param cluster_1,cluster_2 Two different integers in {1,...,k}; two estimated clusters to test, as indexed by the results of
-#' \code{kmeans_estimation}.
-#' @param iso Boolean. If TRUE, an isotropic covariance matrix model is used.
-#' @param sig Numeric; noise standard deviation for the observed data, a non-negative number;
-#' relevant if \code{iso}=TRUE. If it's not given as input, a median-based estimator will be by default (see Section 4.2 of our manuscript).
-#' @param covMat Numeric matrix; if \code{iso} is FALSE, *required* \eqn{q} by \eqn{q} matrix specifying \eqn{\Sigma}.
-#' @param iter.max Positive integer; 	the maximum number of iterations allowed in k-means clustering algorithm. Default to \code{10}.
-#' @param seed Random seed for the initialization in k-means clustering algorithm.
-#' @param tol_eps A small number specifying the convergence criterion for k-means clustering,
-#' default to \code{1e-6}.
-#'
-#' @return Returns a list with the following elements:
-#' \itemize{
-#' \item \code{p_naive} the naive p-value which ignores the fact that the clusters under consideration
-#' are estimated from the same data used for testing
-#' \item \code{pval} the selective p-value \eqn{p_{selective}} in Chen and Witten (2022+)
-#' \item \code{final_interval} the conditioning set of Chen and Witten (2022+), stored as the \code{Intervals} class
-#' \item \code{test_stat} test statistic: the difference in the empirical means of two estimated clusters
-#' \item \code{final_cluster} Estimated clusters via k-means clustering
-#' }
-#'
-#' @export
-#'
-#' @details
-#' For better rendering of the equations, visit https://yiqunchen.github.io/KmeansInference/reference/index.html.
-#'
-#' Consider the generative model \eqn{X ~ MN(\mu,I_n,\sigma^2 I_q)}. First recall that k-means clustering
-#' solves the following optimization problem
-#' \deqn{ \sum_{k=1}^K \sum_{i \in C_k} \big\Vert x_i - \sum_{i \in C_k} x_i/|C_k| \big\Vert_2^2 , }
-#'  where \eqn{C_1,..., C_K} forms a partition of the integers \eqn{1,..., n}, and can be regarded as
-#'  the estimated clusters of the original observations. Lloyd's algorithm is an iterative apparoach to solve
-#'  this optimization problem.
-#' Now suppose we want to test whether the means of two estimated clusters \code{cluster_1} and \code{cluster_2}
-#' are equal; or equivalently, the null hypothesis of the form \eqn{H_{0}:  \mu^T \nu = 0_q} versus
-#' \eqn{H_{1}: \mu^T \nu \neq 0_q} for suitably chosen \eqn{\nu} and all-zero vector \eqn{0_q}.
-#'
-#' This function computes the following p-value:
-#' \deqn{P \Big( || X^T\nu || \ge || x^T\nu ||_2 \; | \;
-#'   \bigcap_{t=1}^{T}\bigcap_{i=1}^{n} \{ c_i^{(t)}(X) =
-#'  c_i^{(t)}( x ) \},  \Pi Y  =  \Pi y \Big),}
-#' where \eqn{c_i^{(t)}} is the is the cluster to which the \eqn{i}th observation is assigned during the \eqn{t}th iteration of
-#' Lloyd's algorithm, and \eqn{\Pi} is the orthogonal projection to the orthogonal complement of \eqn{\nu}.
-#' In particular, the test based on this p-value controls the selective Type I error and has substantial power.
-#' Readers can refer to the Sections 2 and 4 in Chen and Witten (2022+) for more details.
-
-#' @references
-#' Lloyd, S. P. (1957, 1982). Least squares quantization in PCM. Technical Note, Bell Laboratories.
-#' Published in 1982 in IEEE Transactions on Information Theory, 28, 128–137.
-#'
-kmeans_inference_1f_less_cond <- structure(function(X, k, cluster_1, cluster_2,
-                                          feat, iso=FALSE, sig=NULL, covMat=NULL,
-                                          iter.max = 10, seed = 1234,
-                                          tol_eps = 1e-6, n_mc_sim = 1,
-                                          verbose=TRUE){
-
-  set.seed(seed)
-  if(!is.matrix(X)) stop("X should be a matrix")
-  if(sum(is.na(X))>0){stop("NA is not allowed in the input data X")}
-  if(k>=nrow(X)){
-    stop("Cannot have more clusters than observations")
-  }
-  if ((iso)&(is.null(sig))){
-    cat("Variance not specified, using a robust median-based estimator by default!\n")
-    estimate_MED <- function(X){
-      for (j in c(1:ncol(X))){
-        X[,j] <- X[,j]-median(X[,j])
-      }
-      sigma_hat <- sqrt(median(X^2)/qchisq(1/2,df=1))
-      return(sigma_hat)
-    }
-    sig <- estimate_MED(X)
-  }
-  if(is.null(sig)&is.null(covMat)){
-    stop("At least one of variance and covariance matrix must be specified!")
-  }
-  if((!is.null(sig))&(!is.null(covMat))){
-    stop("Only one of variance and covariance matrix can be specified!")
-  }
-  if (!(iso)&(is.null(covMat))){
-    stop("You must specify covMat when iso=FALSE!\n")
-  }
-  if((min(cluster_1,cluster_2)<1)|(max(cluster_1,cluster_2)>k)){
-    stop("Cluster numbers must be between 1 and k!")
-  }
-  n <- dim(X)[1]
-  p <- dim(X)[2]
-  # get the list of all assigned clusters first
-  estimated_k_means <- kmeans_estimation(X, k, iter.max, seed, tol_eps, verbose)
-  # check if we get the desired number of clusters:
-  if(length(unique(estimated_k_means$final_cluster))<k){
-    stop("k-means clustering did not return the desired number of clusters! Try a different seed?")
-  }
-  estimated_final_cluster <- estimated_k_means$cluster[[estimated_k_means$iter]]
-  all_T_clusters <- do.call(rbind, estimated_k_means$cluster)
-  all_T_centroids <- estimated_k_means$centers
-  T_length <- nrow(all_T_clusters)
-  # construct contrast vector
-  v_vec <- rep(0, times=nrow(X))
-  a_vec <- rep(0, times=nrow(X))
-  mean_indicator_vec <- (estimated_final_cluster == cluster_1)|(estimated_final_cluster == cluster_2)
-  a_vec[mean_indicator_vec] <- 1/(sum(mean_indicator_vec))
-  v_vec[estimated_final_cluster == cluster_1] = 1/(sum(estimated_final_cluster == cluster_1))
-  v_vec[estimated_final_cluster == cluster_2] = -1/(sum(estimated_final_cluster == cluster_2))
-
-  n1 <- sum(estimated_final_cluster == cluster_1)
-  n2 <- sum(estimated_final_cluster == cluster_2)
-  squared_norm_nu <- 1/n1 + 1/n2
-  v_norm <- sqrt(squared_norm_nu) # recycle this computed value
-  # compute a norm
-  a_norm <- sqrt(1/sum(mean_indicator_vec))
-  # create the B matrix
-  B <- diag(nrow(X))
-  B <- B[,!(mean_indicator_vec)]
-  # compute UPsi
-  W <- diag(nrow(X))-B%*%t(B)-a_vec%*%t(a_vec)/(a_norm^2)-v_vec%*%t(v_vec)/squared_norm_nu
-  # note that the rank is not quite right here
-  # rank of W is |c1|+|c2|-2; U^TU is very close to identity -> checked
-  U <- eigen(W,symmetric = TRUE)$vectors[,1:(sum(mean_indicator_vec)-2)]
-  # compute XTv
-  diff_means_feat <- mean(X[estimated_final_cluster == cluster_1, feat]) -
-    mean(X[estimated_final_cluster == cluster_2,feat])
-  # compute additional quantities we need
-  # average
-  mean_feat <- mean(X[mean_indicator_vec, feat])
-  p_naive <- NULL
-  # compute test_stat in the isotropic case
-  # this should be n-n1-n2
-  Psi_observed <- t(U) %*% X[,feat]
-  # n_mc_sim by n-n1-n2
-  Psi_matrix <- matrix(rnorm(n=n_mc_sim*(dim(Psi_observed)[1]),
-                              mean=0,sd=sqrt(diag(covMat[feat,feat]))),
-                       nrow=(n_mc_sim), byrow = T)
-  # n by 1
-  UPsi_observed <- U %*% Psi_observed
-  UPsi_simulated_mat <- U %*% t(Psi_matrix)
-  # hard code in the observed value
-  UPsi_simulated_mat[,1] <- UPsi_observed
-  if(!is.null(sig)){
-    test_stats <- diff_means_feat
-    scale_factor <- squared_norm_nu*sig^2
-    # compute S
-    final_interval_TN <- kmeans_compute_S_1f_iso_less_cond(X, estimated_k_means, all_T_clusters,
-                                                 all_T_centroids,n, diff_means_feat,
-                                                 v_vec,v_norm, T_length, k,
-                                                 feat, sig^2)
-  }
-
-  # compute test_stats in the general cov case
-
-  if(!is.null(covMat) ){
-
-    test_stats <- diff_means_feat
-
-    # compute S
-    sig_squared <- covMat[feat, feat]
-    scaledSigRow <- covMat[feat, ]/sig_squared
-    scaledSigRow_2_norm <- norm_vec(scaledSigRow)
-
-    scale_factor <- squared_norm_nu*sig_squared
-
-    final_interval_TN <- kmeans_compute_S_1f_genCov_less_cond(X=X,
-                                      estimated_k_means=estimated_k_means,
-                                      all_T_clusters=all_T_clusters,
-                                      all_T_centroids=all_T_centroids,
-                                      n=n,
-                                      diff_means_feat=diff_means_feat,
-                                      mean_feat = mean_feat,
-                                      v_vec=v_vec,
-                                      v_norm=v_norm,
-                                      a_vec=a_vec,
-                                      a_norm=a_norm,
-                                      B=B,
-                                      T_length=T_length,
-                                      k=k,
-                                      feat=feat,
-                                      scaledSigRow=scaledSigRow,
-                                      scaledSigRow_2_norm=scaledSigRow_2_norm,
-                                      UPsi=UPsi_observed)
-
-    # improve numerical stability
-    final_interval_TN <- intervals::interval_union(as(final_interval_TN, "Intervals_full"),
-                                                   intervals::Intervals_full(c(test_stats-(1e-09),
-                                                                               test_stats+(1e-09))),
-                                                   check_valid=FALSE)
-    # update pval at the end of the day
-    # is this calc... correct tho? -- yes but only for mu = 0
-    # cat('Prob_E',Prob_E,'\n')
-    if(test_stats > 0) {
-      pval <-  TNSurv(test_stats, 0, sqrt(scale_factor), final_interval_TN) +
-        TNSurv(test_stats, 0, sqrt(scale_factor),
-               intervals::Intervals(as.matrix(-final_interval_TN)[, 2:1]))
-    } else {
-      pval <-  TNSurv(-test_stats, 0, sqrt(scale_factor), final_interval_TN) +
-        TNSurv(-test_stats, 0, sqrt(scale_factor),
-               intervals::Intervals(as.matrix(-final_interval_TN)[, 2:1]))
-    }
-
-  # TODO: clean them up later
-  final_pval_num <- list()
-  final_pval_denom <- list()
-  final_intervals <- list()
-  # this is the for loop that gives us more pvals
-  pval_weighted <- NULL
-  if (n_mc_sim > 1){
-
-    for (i in c(1:n_mc_sim)){
-      # store the final intervals
-      curr_final_interval <- kmeans_compute_S_1f_genCov_less_cond(X=X,
-                                        estimated_k_means=estimated_k_means,
-                                        all_T_clusters=all_T_clusters,
-                                        all_T_centroids=all_T_centroids,
-                                        n=n,
-                                        diff_means_feat=diff_means_feat,
-                                        mean_feat = mean_feat,
-                                        v_vec=v_vec,
-                                        v_norm=v_norm,
-                                        a_vec=a_vec,
-                                        a_norm=a_norm,
-                                        B=B,
-                                        T_length=T_length,
-                                        k=k,
-                                        feat=feat,
-                                        scaledSigRow=scaledSigRow,
-                                        scaledSigRow_2_norm=scaledSigRow_2_norm,
-                                        UPsi=UPsi_simulated_mat[,i])
-
-      # we have stored the final interval!
-      # but for monte carlo purposes, we actually need ratio of average
-      # rathe than average of ratio
-      # TODO
-      # list(res, num, denom)
-      final_intervals[[i]] <- curr_final_interval
-      curr_final_interval <- intervals::interval_union(as(curr_final_interval,
-                                                          "Intervals_full"),
-        intervals::Intervals_full(c(test_stats-(1e-09), test_stats+(1e-09))),
-                                                       check_valid=FALSE)
-
-      # we use abs() to pull two cases together
-      pull_pvals_part_1 <- TNSurv(abs(test_stats), 0, sqrt(scale_factor),
-                                  curr_final_interval, return_all_prob=TRUE)
-      # remember to 1- later
-      pull_pvals_part_2 <- TNSurv(-1*abs(test_stats), 0, sqrt(scale_factor),
-                                    curr_final_interval,
-                                    return_all_prob=TRUE)
-      if ((length(pull_pvals_part_1)==3)&(length(pull_pvals_part_2)==3)){
-        final_pval_num[[i]] <- pull_pvals_part_1[[2]]+
-          (pull_pvals_part_2[[3]]-pull_pvals_part_2[[2]])
-        final_pval_denom[[i]] <- pull_pvals_part_1[[3]]
-      }
-
-      if ((length(pull_pvals_part_1)==1)&(length(pull_pvals_part_2)==3)){
-        final_pval_num[[i]] <- (pull_pvals_part_2[[3]]-pull_pvals_part_2[[2]])
-        final_pval_denom[[i]] <- pull_pvals_part_2[[3]]
-      }
-
-      if ((length(pull_pvals_part_1)==3)&(length(pull_pvals_part_2)==1)){
-        final_pval_num[[i]] <- pull_pvals_part_1[[2]]
-        final_pval_denom[[i]] <- pull_pvals_part_1[[3]]
-      }
-    }
-    # ready to compute the weighted pval
-    final_pval_denom <- unlist(final_pval_denom)
-    final_pval_num <- unlist(final_pval_num)
-    valid_index <- (final_pval_denom!=0)&(final_pval_num<=final_pval_denom)
-    pval_weighted = sum(final_pval_num[valid_index])/sum(final_pval_denom[valid_index])
-    if (is.nan(pval_weighted)){
-      # if we get invalid result, let's just draw a value
-      pval_weighted <- runif(1,0,1)
-    }
-  }
-}
-  p_naive <- naive.two.sided.pval(z = test_stats,
-                                  mean = 0,
-                                  sd = sqrt(scale_factor))
-
-  result_list <- list("final_interval"=final_interval_TN,
-                      "final_cluster" = estimated_final_cluster,
-                      "test_stat"=test_stats,
-                      "cluster_1" = cluster_1,
-                      "cluster_2" = cluster_2,
-                      "feat" = feat,
-                      "sig" = sig,
-                      "covMat" = covMat,
-                      "scale_factor" = scale_factor,
-                      "p_naive" = p_naive,
-                      "pval" = pval,
-                      "call" = match.call(),
-                      "temp_final_pval_num" = final_pval_num,
-                      "temp_final_pval_denom" = final_pval_denom,
-                      "sim_final_intervals" = final_intervals,
-                      "pval_weighted" = pval_weighted,
-                      "n_mc_sim" = n_mc_sim)
-  class(result_list) <- "kmeans_inference"
-  return(result_list)
-
-})
-
-
-
-
-
-
-
-
