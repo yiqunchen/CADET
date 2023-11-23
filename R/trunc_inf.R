@@ -73,7 +73,7 @@ test_hier_clusters_exact_1f <- function(X, link, hcl, K, k1, k2, feat, indpt=TRU
   n <- nrow(X)
   q <- ncol(X)
 
-  if(link == "complete") stop("Exact p-value not supported. See 'test_complete_hier_clusters_approx' for an approximate p-value.")
+  if(link == "complete") stop("Exact p-value not supported. ")
   if(!link %in% c("single", "average", "centroid", "ward.D", "mcquitty", "median")) stop("Linkage should be 'single', 'average', 'centroid', 'ward.D', 'mcquitty', or 'median'")
   if(!is_integer_between_a_b(K, 2, n)) stop("number of clusters (K) should be between 2 and n")
   if(!is_integer_between_a_b(k1, 1, K) | !is_integer_between_a_b(k2, 1, K)) stop(paste("cluster indices should be between 1 and K", sep=""))
