@@ -60,13 +60,7 @@
 #'
 #' @seealso \code{\link{rect_hier_clusters}} for visualizing clusters \code{k1} and \code{k2} in the dendrogram;
 #'
-#' \code{\link{test_complete_hier_clusters_approx_1f}} for approximate p-values for complete linkage hierarchical clustering;
-#'
-#' \code{\link{test_clusters_approx_1f}} for approximate p-values for a user-specified clustering function;
-#'
-#' \code{\link{test_hier_clusters_exact}} for exact p-values for a difference in the mean of any feature.
-#'
-#' @references Lucy L. Gao et al. "Selective inference for hierarchical clustering". arXiv preprint (2020).
+#' @references Yiqun T. Chen and Lucy L. Gao "Testing for a difference in means of a single feature after clustering". arXiv preprint (2023).
 test_hier_clusters_exact_1f <- function(X, link, hcl, K, k1, k2, feat, indpt=TRUE, sig=NULL, covMat=NULL) {
   if(!is.matrix(X)) stop("X should be a matrix")
 
