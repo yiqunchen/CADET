@@ -112,7 +112,6 @@ norm_sq_phi_kmeans_1f <- function(X, v, diff_means_feat, v_norm, i, j,
 
 #' Represent <x'(phi)_i, x'(phi)_j> as a quadratic function in phi ----
 #' @keywords internal
-#'
 #' @param XTv, vector p by 1
 #' @param v_norm, 2-norm of vector v
 #' @param cl, factor vector n by 1 (most recent cluster assignment)
