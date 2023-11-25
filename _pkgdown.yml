@@ -1,4 +1,18 @@
 url: https://yiqunchen.github.io/CADET/
-template:
-  bootstrap: 5
+navbar:
+  structure:
+    left:  [home, articles, tutorials, example, reference]
+    right: [github]
 
+  components:
+    articles:
+      text: Technical details
+      href: articles/technical_details.html
+
+    tutorials:
+      text: Software tutorials
+      href: articles/Tutorials.html
+
+    example:
+      text: Application to single-cell RNA-seq data
+      href: articles/real_data_example.html
