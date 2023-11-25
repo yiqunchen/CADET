@@ -77,17 +77,17 @@
     
     
 <center>
-<img src="../reference/figures/figure_1_a.png" style="width:30.0%"><img src="../reference/figures/figure_1_b.png" style="width:30.0%"><img src="../reference/figures/figure_1_c.png" style="width:30.0%"><figcaption>
-Figure 1: <em>Left</em>: One simulated dataset generated according to
-<span class="math inline">\(\mathcal{MN}_{100\times
-2}(\textbf{0}_{100\times 2}, \textbf{I}_{100}, \sigma^2
-\textbf{I}_{2})\)</span>. We apply <span class="math inline">\(k\)</span>-means clustering to obtain three
-clusters. The cluster centroids are displayed as triangles.
-<em>Center</em>: Quantile-quantile plot of the Wald p-values applied to
-2,000 simulated datasets from <span class="math inline">\(\mathcal{MN}_{100\times 2}(\textbf{0}_{100\times
-2}, \textbf{I}_{100}, \sigma^2 \textbf{I}_{2})\)</span>. <em>Right</em>:
-Quantile-quantile plot of our proposed p-values applied to the same
-simulated datasets as in center.
+<img src="figures/fig_1.png" style="width:90.0%"><figcaption>
+Figure 1: We simulated one dataset according to <span class="math inline">\(\mathcal{MN}_{100\times 10}(\textbf{\mu},
+\textbf{I}_{100}, \Sigma)\)</span>, where <span class="math inline">\(\mu_i = (1,0_9)^T\)</span> for <span class="math inline">\(i=1,\ldots, 50\)</span> and <span class="math inline">\(\mu_i = (0_9,1)^T\)</span> for <span class="math inline">\(i=51,\ldots, 100\)</span>, and <span class="math inline">\(\Sigma_{ij} = 1\{i=j\}+0.4\cdot 1\{i\neq
+j\}\)</span>. <em>(a)</em>: Empirical distribution of feature 2 based on
+the simulated data set. In this case, all observations have the same
+mean for feature 2. <em>(b)</em>: We apply k-means clustering to obtain
+two clusters and plot the empirical distribution of feature 2 stratified
+by the clusters. <em>(c)</em>: Quantile-quantile plot of naive z-test
+(black) our proposed p-values (orange) applied to the simulated data
+sets for testing the null hypotheses for a difference in means for
+features 2–8.
 </figcaption>
 </center>
 <div class="section level3">
