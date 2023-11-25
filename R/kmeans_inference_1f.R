@@ -129,18 +129,26 @@ kmeans_estimation <- function(X, k, iter.max = 10, seed = 1234){
 }
 
 # ----- main function to test equality of the means of two estimated clusters via k-means clustering -----
-#' Test for a difference in means between clusters of observations
+#' Test for a difference in means of a single feature between clusters of observations
 #' identified via k-means clustering.
 #'
-#' This function tests the null hypothesis of no difference in means between
-#' output by k-means clustering. The clusters are numbered as per the results of
-#' the \code{kmeans_estimation} function in the \code{CADET} package.
+#' This function tests the null hypothesis of no difference in the means of a given
+#' feature between a pair of clusters obtained via k-means clustering. The clusters
+#' are numbered as per the results of the \code{kmeans_estimation} function in the \code{CADET} package.
+#' By default, this function assumes that the features are independent. If known,
+#' the variance of feature \code{feat} (\eqn{\sigma}) can be passed in using the
+#' \code{sigma} argument; otherwise, an estimate of \eqn{\sigma} will be used.
+#'
+#' Setting \code{iso} to \code{FALSE} (default) allows the features to be dependent, i.e.
+#' \eqn{Cov(X_i) = \Sigma}. \eqn{\Sigma} need to be passed in using the \code{covMat} argument.
+#'
 #' @param X Numeric matrix; \eqn{n} by \eqn{q} matrix of observed data
 #' @param k Integer; the number of clusters for k-means clustering
 #' @param cluster_1,cluster_2 Two different integers in {1,...,k}; two estimated clusters to test, as indexed by the results of
 #' \code{kmeans_estimation}.
 #' @param feat Integer selecting the feature to test.
-#' @param iso Boolean. If TRUE, an isotropic covariance matrix model is used.
+#' @param iso Boolean. If \code{TRUE}, an isotropic covariance matrix model is used.
+#' Default is \code{code}.
 #' @param sig Numeric; noise standard deviation for the observed data, a non-negative number;
 #' relevant if \code{iso}=TRUE. If it's not given as input, a median-based estimator will be by default (see Section 4.2 of our manuscript).
 #' @param covMat Numeric matrix; if \code{iso} is FALSE, *required* \eqn{q} by \eqn{q} matrix specifying \eqn{\Sigma}.
@@ -151,10 +159,11 @@ kmeans_estimation <- function(X, k, iter.max = 10, seed = 1234){
 #' \itemize{
 #' \item \code{p_naive} the naive p-value which ignores the fact that the clusters under consideration
 #' are estimated from the same data used for testing
-#' \item \code{pval} the selective p-value \eqn{p_{selective}} in Chen and Witten (2022+)
-#' \item \code{final_interval} the conditioning set of Chen and Witten (2022+), stored as the \code{Intervals} class
-#' \item \code{test_stat} test statistic: the difference in the empirical means of two estimated clusters
-#' \item \code{final_cluster} Estimated clusters via k-means clustering
+#' \item \code{pval} the selective p-value \eqn{p_{kmeans,j}} in Chen and Gao (2023+)
+#' \item \code{final_interval} the conditioning set of Chen and Gao (2023+), stored as an \code{Intervals} class object.
+#' \item \code{test_stat} test statistic: the (signed) difference in the empirical means of the
+#' specified feature between two estimated clusters.
+#' \item \code{final_cluster} Estimated clusters via k-means clustering.
 #' }
 #'
 #' @export
@@ -169,18 +178,56 @@ kmeans_estimation <- function(X, k, iter.max = 10, seed = 1234){
 #'  the estimated clusters of the original observations. Lloyd's algorithm is an iterative apparoach to solve
 #'  this optimization problem.
 #' Now suppose we want to test whether the means of two estimated clusters \code{cluster_1} and \code{cluster_2}
-#' are equal; or equivalently, the null hypothesis of the form \eqn{H_{0}:  \mu^T \nu = 0_q} versus
-#' \eqn{H_{1}: \mu^T \nu \neq 0_q} for suitably chosen \eqn{\nu} and all-zero vector \eqn{0_q}.
+#' are equal; or equivalently, the null hypothesis of the form \eqn{H_{0,j}:  (\mu^T \nu)_j = 0} versus
+#' \eqn{H_{1,j}: (\mu^T \nu)_j \neq 0} for suitably chosen \eqn{\nu} and feature number j.
 #'
 #' This function computes the following p-value:
-#' \deqn{P \Big( || X^T\nu || \ge || x^T\nu ||_2 \; | \;
+#' \deqn{P \Big( |(X^T\nu)_j| \ge |(x^T\nu)_j| \; | \;
 #'   \bigcap_{t=1}^{T}\bigcap_{i=1}^{n} \{ c_i^{(t)}(X) =
-#'  c_i^{(t)}( x ) \},  \Pi Y  =  \Pi y \Big),}
+#'  c_i^{(t)}( x ) \},  U(X)  =  U(x) \Big),}
 #' where \eqn{c_i^{(t)}} is the is the cluster to which the \eqn{i}th observation is assigned during the \eqn{t}th iteration of
-#' Lloyd's algorithm, and \eqn{\Pi} is the orthogonal projection to the orthogonal complement of \eqn{\nu}.
-#' In particular, the test based on this p-value controls the selective Type I error and has substantial power.
-#' Readers can refer to the Sections 2 and 4 in Chen and Witten (2022+) for more details.
-
+#' Lloyd's algorithm, and \eqn{U} is defined in Section 3.2 of Chen and Gao (2023+).
+#' The test that rejects \eqn{H_{0,j}} when this p-value is less than \eqn{\alpha} controls the selective Type I error
+#' rate at \eqn{\alpha}, and has substantial power.
+#' Readers can refer to the Sections 2-4 in Chen and Gao (2023+) for more details.
+#' @examples
+#' library(CADET)
+#' library(ggplot2)
+#' set.seed(2022)
+#' n <- 150
+#' true_clusters <- c(rep(1, 50), rep(2, 50), rep(3, 50))
+#' delta <- 10
+#' q <- 2
+#' mu <- rbind(c(delta/2,rep(0,q-1)),
+#' c(rep(0,q-1), sqrt(3)*delta/2),
+#' c(-delta/2,rep(0,q-1)) )
+#' sig <- 1
+#' # Generate a matrix normal sample
+#' X <- matrix(rnorm(n*q, sd=sig), n, q) + mu[true_clusters, ]
+#' # Visualize the data
+#' ggplot(data.frame(X), aes(x=X1, y=X2)) +
+#' geom_point(cex=2) + xlab("Feature 1") + ylab("Feature 2") +
+#'  theme_classic(base_size=18) + theme(legend.position="none") +
+#'  scale_colour_manual(values=c("dodgerblue3", "rosybrown", "orange")) +
+#'  theme(legend.title = element_blank(),
+#'  plot.title = element_text(hjust = 0.5))
+#'  k <- 3
+#'  # Run k-means clustering with K=3
+#'  estimated_clusters <- kmeans_estimation(X, k,iter.max = 20,seed = 2023)$final_cluster
+#'  table(true_clusters,estimated_clusters)
+#'  # Visualize the clusters
+#'  ggplot(data.frame(X), aes(x=X1, y=X2, col=as.factor(estimated_clusters))) +
+#'  geom_point(cex=2) + xlab("Feature 1") + ylab("Feature 2") +
+#'  theme_classic(base_size=18) + theme(legend.position="none") +
+#'  scale_colour_manual(values=c("dodgerblue3", "rosybrown", "orange")) +
+#'  theme(legend.title = element_blank(), plot.title = element_text(hjust = 0.5))
+#' # Let's test the difference between first feature across estimated clusters 1 and 2:
+#' cl_1_2_feat_1 <-  kmeans_inference_1f(X, k=3, 1, 2,
+#'                                      feat=1, iso=TRUE,
+#'                                      sig=sig,
+#'                                      covMat=NULL, seed=2023,
+#'                                      iter.max = 30)
+#' summary(cl_1_2_feat_1)
 #' @references
 #' Lloyd, S. P. (1957, 1982). Least squares quantization in PCM. Technical Note, Bell Laboratories.
 #' Published in 1982 in IEEE Transactions on Information Theory, 28, 128–137.
@@ -199,9 +246,9 @@ kmeans_inference_1f <- structure(function(X, k, cluster_1, cluster_2,
     cat("Variance not specified, using a robust median-based estimator by default!\n")
     estimate_MED <- function(X){
       for (j in c(1:ncol(X))){
-        X[,j] <- X[,j]-median(X[,j])
+        X[,j] <- X[,j]-stats::median(X[,j])
         }
-      sigma_hat <- sqrt(median(X^2)/qchisq(1/2,df=1))
+      sigma_hat <- sqrt(stats::median(X^2)/stats::qchisq(1/2,df=1))
       return(sigma_hat)
     }
     sig <- estimate_MED(X)

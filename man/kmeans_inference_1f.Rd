@@ -2,7 +2,7 @@
 % Please edit documentation in R/kmeans_inference_1f.R
 \name{kmeans_inference_1f}
 \alias{kmeans_inference_1f}
-\title{Test for a difference in means between clusters of observations
+\title{Test for a difference in means of a single feature between clusters of observations
 identified via k-means clustering.}
 \usage{
 kmeans_inference_1f(
@@ -28,7 +28,8 @@ kmeans_inference_1f(
 
 \item{feat}{Integer selecting the feature to test.}
 
-\item{iso}{Boolean. If TRUE, an isotropic covariance matrix model is used.}
+\item{iso}{Boolean. If \code{TRUE}, an isotropic covariance matrix model is used.
+Default is \code{code}.}
 
 \item{sig}{Numeric; noise standard deviation for the observed data, a non-negative number;
 relevant if \code{iso}=TRUE. If it's not given as input, a median-based estimator will be by default (see Section 4.2 of our manuscript).}
@@ -44,18 +45,26 @@ Returns a list with the following elements:
 \itemize{
 \item \code{p_naive} the naive p-value which ignores the fact that the clusters under consideration
 are estimated from the same data used for testing
-\item \code{pval} the selective p-value \eqn{p_{selective}} in Chen and Witten (2022+)
-\item \code{final_interval} the conditioning set of Chen and Witten (2022+), stored as the \code{Intervals} class
-\item \code{test_stat} test statistic: the difference in the empirical means of two estimated clusters
-\item \code{final_cluster} Estimated clusters via k-means clustering
+\item \code{pval} the selective p-value \eqn{p_{kmeans,j}} in Chen and Gao (2023+)
+\item \code{final_interval} the conditioning set of Chen and Gao (2023+), stored as an \code{Intervals} class object.
+\item \code{test_stat} test statistic: the (signed) difference in the empirical means of the
+specified feature between two estimated clusters.
+\item \code{final_cluster} Estimated clusters via k-means clustering.
 }
 }
 \description{
-This function tests the null hypothesis of no difference in means between
-output by k-means clustering. The clusters are numbered as per the results of
-the \code{kmeans_estimation} function in the \code{CADET} package.
+This function tests the null hypothesis of no difference in the means of a given
+feature between a pair of clusters obtained via k-means clustering. The clusters
+are numbered as per the results of the \code{kmeans_estimation} function in the \code{CADET} package.
+By default, this function assumes that the features are independent. If known,
+the variance of feature \code{feat} (\eqn{\sigma}) can be passed in using the
+\code{sigma} argument; otherwise, an estimate of \eqn{\sigma} will be used.
 }
 \details{
+Setting \code{iso} to \code{FALSE} (default) allows the features to be dependent, i.e.
+\eqn{Cov(X_i) = \Sigma}. \eqn{\Sigma} need to be passed in using the \code{covMat} argument.
+
+
 For better rendering of the equations, visit https://yiqunchen.github.io/CADET/reference/index.html.
 
 Consider the generative model \eqn{X ~ MN(\mu,I_n,\sigma^2 I_q)}. First recall that k-means clustering
@@ -65,17 +74,57 @@ solves the following optimization problem
  the estimated clusters of the original observations. Lloyd's algorithm is an iterative apparoach to solve
  this optimization problem.
 Now suppose we want to test whether the means of two estimated clusters \code{cluster_1} and \code{cluster_2}
-are equal; or equivalently, the null hypothesis of the form \eqn{H_{0}:  \mu^T \nu = 0_q} versus
-\eqn{H_{1}: \mu^T \nu \neq 0_q} for suitably chosen \eqn{\nu} and all-zero vector \eqn{0_q}.
+are equal; or equivalently, the null hypothesis of the form \eqn{H_{0,j}:  (\mu^T \nu)_j = 0} versus
+\eqn{H_{1,j}: (\mu^T \nu)_j \neq 0} for suitably chosen \eqn{\nu} and feature number j.
 
 This function computes the following p-value:
-\deqn{P \Big( || X^T\nu || \ge || x^T\nu ||_2 \; | \;
+\deqn{P \Big( |(X^T\nu)_j| \ge |(x^T\nu)_j| \; | \;
   \bigcap_{t=1}^{T}\bigcap_{i=1}^{n} \{ c_i^{(t)}(X) =
- c_i^{(t)}( x ) \},  \Pi Y  =  \Pi y \Big),}
+ c_i^{(t)}( x ) \},  U(X)  =  U(x) \Big),}
 where \eqn{c_i^{(t)}} is the is the cluster to which the \eqn{i}th observation is assigned during the \eqn{t}th iteration of
-Lloyd's algorithm, and \eqn{\Pi} is the orthogonal projection to the orthogonal complement of \eqn{\nu}.
-In particular, the test based on this p-value controls the selective Type I error and has substantial power.
-Readers can refer to the Sections 2 and 4 in Chen and Witten (2022+) for more details.
+Lloyd's algorithm, and \eqn{U} is defined in Section 3.2 of Chen and Gao (2023+).
+The test that rejects \eqn{H_{0,j}} when this p-value is less than \eqn{\alpha} controls the selective Type I error
+rate at \eqn{\alpha}, and has substantial power.
+Readers can refer to the Sections 2-4 in Chen and Gao (2023+) for more details.
+}
+\examples{
+library(CADET)
+library(ggplot2)
+set.seed(2022)
+n <- 150
+true_clusters <- c(rep(1, 50), rep(2, 50), rep(3, 50))
+delta <- 10
+q <- 2
+mu <- rbind(c(delta/2,rep(0,q-1)),
+c(rep(0,q-1), sqrt(3)*delta/2),
+c(-delta/2,rep(0,q-1)) )
+sig <- 1
+# Generate a matrix normal sample
+X <- matrix(rnorm(n*q, sd=sig), n, q) + mu[true_clusters, ]
+# Visualize the data
+ggplot(data.frame(X), aes(x=X1, y=X2)) +
+geom_point(cex=2) + xlab("Feature 1") + ylab("Feature 2") +
+ theme_classic(base_size=18) + theme(legend.position="none") +
+ scale_colour_manual(values=c("dodgerblue3", "rosybrown", "orange")) +
+ theme(legend.title = element_blank(),
+ plot.title = element_text(hjust = 0.5))
+ k <- 3
+ # Run k-means clustering with K=3
+ estimated_clusters <- kmeans_estimation(X, k,iter.max = 20,seed = 2023)$final_cluster
+ table(true_clusters,estimated_clusters)
+ # Visualize the clusters
+ ggplot(data.frame(X), aes(x=X1, y=X2, col=as.factor(estimated_clusters))) +
+ geom_point(cex=2) + xlab("Feature 1") + ylab("Feature 2") +
+ theme_classic(base_size=18) + theme(legend.position="none") +
+ scale_colour_manual(values=c("dodgerblue3", "rosybrown", "orange")) +
+ theme(legend.title = element_blank(), plot.title = element_text(hjust = 0.5))
+# Let's test the difference between first feature across estimated clusters 1 and 2:
+cl_1_2_feat_1 <-  kmeans_inference_1f(X, k=3, 1, 2,
+                                     feat=1, iso=TRUE,
+                                     sig=sig,
+                                     covMat=NULL, seed=2023,
+                                     iter.max = 30)
+summary(cl_1_2_feat_1)
 }
 \references{
 Lloyd, S. P. (1957, 1982). Least squares quantization in PCM. Technical Note, Bell Laboratories.

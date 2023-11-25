@@ -25,8 +25,8 @@ is_integer_between_a_b <- function(x, a, b) {
 }
 
 naive.two.sided.pval <- function(z, mean, sd){
-  first_side <- pnorm(abs(z), mean =  mean, sd=sd, lower.tail = F)
-  second_side <- pnorm(-1*abs(z), mean =  mean, sd=sd,lower.tail = T)
+  first_side <- stats::pnorm(abs(z), mean =  mean, sd=sd, lower.tail = F)
+  second_side <- stats::pnorm(-1*abs(z), mean =  mean, sd=sd,lower.tail = T)
   two_sided_p_val <- first_side+second_side
   return(two_sided_p_val)
 }
