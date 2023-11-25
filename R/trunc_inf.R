@@ -43,6 +43,7 @@
 #' @examples
 #' # Simulates a 100 x 2 data set with three clusters
 #' set.seed(123)
+#' library(CADET)
 #' dat <- rbind(c(-1, 0), c(0, sqrt(3)), c(1, 0))[rep(1:3, length=100), ] +
 #' matrix(0.2*rnorm(200), 100, 2)
 #'
@@ -61,7 +62,7 @@
 #' @seealso \code{\link{rect_hier_clusters}} for visualizing clusters \code{k1} and \code{k2} in the dendrogram;
 #'
 #' @references Yiqun T. Chen and Lucy L. Gao "Testing for a difference in means of a single feature after clustering". arXiv preprint (2023).
-test_hier_clusters_exact_1f <- function(X, link, hcl, K, k1, k2, feat, indpt=TRUE, sig=NULL, covMat=NULL) {
+test_hier_clusters_exact_1f <- structure(function(X, link, hcl, K, k1, k2, feat, indpt=TRUE, sig=NULL, covMat=NULL) {
   if(!is.matrix(X)) stop("X should be a matrix")
 
   n <- nrow(X)
@@ -125,5 +126,16 @@ test_hier_clusters_exact_1f <- function(X, link, hcl, K, k1, k2, feat, indpt=TRU
              TNSurv(-stat, 0, sqrt(scale_factor), intervals::Intervals(as.matrix(-S)[, 2:1]))
   }
 
-  return(list(stat=abs(stat), pval=pval, trunc=S))
-}
+  p_naive <- naive.two.sided.pval(z = stat,
+                                  mean = 0,
+                                  sd = sqrt(scale_factor))
+  result_list <- list("stat"=stat,
+                      "cluster_1" = k1,
+                      "cluster_2" = k2,
+                      "pval"=pval,
+                      "p_naive"=p_naive,
+                      "trunc"=S,
+                      "linkage"=link)
+  class(result_list) <- "hier_inference"
+  return(result_list)
+})

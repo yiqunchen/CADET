@@ -1,4 +1,4 @@
-# CADET (Clustering And Differential Expression Testing)  <img src="./cadet_sticker.png" align="right" width="150px"/>
+# CADET (Clustering And Differential Expression Testing)  <img src="./man/figures/cadet_sticker.png" align="right" width="150px"/>
 
 ### What is CADET?
 

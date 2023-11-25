@@ -227,7 +227,7 @@ kmeans_estimation <- function(X, k, iter.max = 10, seed = 1234){
 #'                                      sig=sig,
 #'                                      covMat=NULL, seed=2023,
 #'                                      iter.max = 30)
-#' summary(cl_1_2_feat_1)
+#' cl_1_2_feat_1
 #' @references
 #' Lloyd, S. P. (1957, 1982). Least squares quantization in PCM. Technical Note, Bell Laboratories.
 #' Published in 1982 in IEEE Transactions on Information Theory, 28, 128–137.
