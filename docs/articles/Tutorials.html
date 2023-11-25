@@ -185,19 +185,8 @@ the form of a data frame.</p>
 <span>                                      covMat<span class="op">=</span><span class="cn">NULL</span>, seed<span class="op">=</span><span class="fl">2021</span>,</span>
 <span>                                      iter.max <span class="op">=</span> <span class="fl">30</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">cl_1_2_inference_demo</span><span class="op">)</span></span>
-<span><span class="co">#&gt;                Length Class          Mode   </span></span>
-<span><span class="co">#&gt; final_interval   2    Intervals_full numeric</span></span>
-<span><span class="co">#&gt; final_cluster  150    -none-         numeric</span></span>
-<span><span class="co">#&gt; test_stat        1    -none-         numeric</span></span>
-<span><span class="co">#&gt; cluster_1        1    -none-         numeric</span></span>
-<span><span class="co">#&gt; cluster_2        1    -none-         numeric</span></span>
-<span><span class="co">#&gt; feat             1    -none-         numeric</span></span>
-<span><span class="co">#&gt; sig              1    -none-         numeric</span></span>
-<span><span class="co">#&gt; covMat           0    -none-         NULL   </span></span>
-<span><span class="co">#&gt; scale_factor     1    -none-         numeric</span></span>
-<span><span class="co">#&gt; p_naive          1    -none-         numeric</span></span>
-<span><span class="co">#&gt; pval             1    -none-         numeric</span></span>
-<span><span class="co">#&gt; call            11    -none-         call</span></span></code></pre></div>
+<span><span class="co">#&gt;   cluster_1 cluster_2 test_stat p_selective p_naive</span></span>
+<span><span class="co">#&gt; 1         1         2 -9.910708  0.06977109       0</span></span></code></pre></div>
 <p>In the summary, we have the <span class="math inline">\(\ell_2\)</span> norm of the difference in means,
 i.e.,<span class="math inline">\(\left\Vert \sum_{i\in
 {\hat{\mathcal{C}}}_1}\mathbf{x}_i/|\hat{\mathcal{C}}_1| - \sum_{i\in
@@ -247,19 +236,8 @@ anti-conservative test.</p>
 <span>                                      feat<span class="op">=</span><span class="fl">1</span>, iso<span class="op">=</span><span class="cn">TRUE</span>,</span>
 <span>                                      sig<span class="op">=</span><span class="va">sig</span>, covMat<span class="op">=</span><span class="cn">NULL</span>, seed<span class="op">=</span><span class="fl">2021</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">cl_1_4_inference_demo</span><span class="op">)</span></span>
-<span><span class="co">#&gt;                Length Class          Mode   </span></span>
-<span><span class="co">#&gt; final_interval   2    Intervals_full numeric</span></span>
-<span><span class="co">#&gt; final_cluster  150    -none-         numeric</span></span>
-<span><span class="co">#&gt; test_stat        1    -none-         numeric</span></span>
-<span><span class="co">#&gt; cluster_1        1    -none-         numeric</span></span>
-<span><span class="co">#&gt; cluster_2        1    -none-         numeric</span></span>
-<span><span class="co">#&gt; feat             1    -none-         numeric</span></span>
-<span><span class="co">#&gt; sig              1    -none-         numeric</span></span>
-<span><span class="co">#&gt; covMat           0    -none-         NULL   </span></span>
-<span><span class="co">#&gt; scale_factor     1    -none-         numeric</span></span>
-<span><span class="co">#&gt; p_naive          1    -none-         numeric</span></span>
-<span><span class="co">#&gt; pval             1    -none-         numeric</span></span>
-<span><span class="co">#&gt; call            10    -none-         call</span></span></code></pre></div>
+<span><span class="co">#&gt;   cluster_1 cluster_2  test_stat p_selective   p_naive</span></span>
+<span><span class="co">#&gt; 1         1         4 -0.4254602    0.677505 0.1325224</span></span></code></pre></div>
 </div>
   </div>
 

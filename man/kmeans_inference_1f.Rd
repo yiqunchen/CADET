@@ -124,7 +124,7 @@ cl_1_2_feat_1 <-  kmeans_inference_1f(X, k=3, 1, 2,
                                      sig=sig,
                                      covMat=NULL, seed=2023,
                                      iter.max = 30)
-summary(cl_1_2_feat_1)
+cl_1_2_feat_1
 }
 \references{
 Lloyd, S. P. (1957, 1982). Least squares quantization in PCM. Technical Note, Bell Laboratories.

@@ -68,6 +68,7 @@ otherwise, an estimate of \eqn{\Sigma} will be used.
 \examples{
 # Simulates a 100 x 2 data set with three clusters
 set.seed(123)
+library(CADET)
 dat <- rbind(c(-1, 0), c(0, sqrt(3)), c(1, 0))[rep(1:3, length=100), ] +
 matrix(0.2*rnorm(200), 100, 2)
 
