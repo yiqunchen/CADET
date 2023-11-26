@@ -83,7 +83,7 @@ obtained via k-means clustering.</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://yiqunchen.github.io/CADET/">CADET</a></span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://ggplot2.tidyverse.org" class="external-link">ggplot2</a></span><span class="op">)</span></span></code></pre></div>
-<p>We first generate data according to <span class="math inline">\(\mathbf{X} \sim {MN}_{n\times q}(\boldsymbol{\mu},
+<p>We first generate data according to <span class="math inline">\(\mathbf{X} \sim MN_{n\times q}(\boldsymbol{\mu},
 \textbf{I}_n, \sigma^2 \textbf{I}_q)\)</span> with <span class="math inline">\(n=150,q=2,\sigma=1,\)</span> and <span class="math display">\[\begin{align}
 \label{eq:power_model}
 \boldsymbol{\mu}_1 =\ldots = \boldsymbol{\mu}_{50} = \begin{bmatrix}
@@ -95,9 +95,9 @@ obtained via k-means clustering.</p>
 \boldsymbol{\mu}_{101}=\ldots = \boldsymbol{\mu}_{150} = \begin{bmatrix}
 \delta/2 \\ 0_{q-1}
 \end{bmatrix}.
-\end{align}\]</span> Here, we can think of <span class="math inline">\({C}_1 = \{1,\ldots,50\},{C}_2 =
-\{51,\ldots,100\},{C}_3 = \{101,\ldots,150\}\)</span> as the “true
-clusters”. In the figure below, we display one such simulation <span class="math inline">\(\mathbf{x}\in\mathbb{R}^{100\times 2}\)</span>
+\end{align}\]</span> Here, we can think of <span class="math inline">\(C_1 = \{1,\ldots,50\},C_2 = \{51,\ldots,100\},C_3
+= \{101,\ldots,150\}\)</span> as the “true clusters”. In the figure
+below, we display one such simulation <span class="math inline">\(\mathbf{x}\in\mathbb{R}^{100\times 2}\)</span>
 with <span class="math inline">\(\delta=10\)</span>.</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">2022</span><span class="op">)</span></span>
@@ -187,9 +187,8 @@ the form of a data frame.</p>
 <span><span class="co">#&gt;   cluster_1 cluster_2 test_stat  p_selective       p_naive</span></span>
 <span><span class="co">#&gt; 1         2         3  4.464756 8.514513e-29 2.171388e-110</span></span></code></pre></div>
 <p>In the summary, we have the empirical difference in means of the
-second feature between the two clusters, i.e.,<span class="math inline">\(\sum_{i\in
-{\hat{{G}}}}\mathbf{x}_{i,2}/|\hat{{G}}| - \sum_{i\in
-\hat{G}'}\mathbf{x}_{i,2}/|\hat{G}'|\)</span>
+second feature between the two clusters, i.e.,<span class="math inline">\(\sum_{i\in \hat{G}}\mathbf{x}_{i,2}/|\hat{{G}}| -
+\sum_{i\in \hat{G}'}\mathbf{x}_{i,2}/|\hat{G}'|\)</span>
 (<code>test_stats</code>), the naive p-value based on a z-test
 (<code>p_naive</code>), and the selective <span class="math inline">\(p\)</span>-value (<code>p_selective</code>). In
 this case, the test based on <span class="math inline">\(p_{\text{selective}}\)</span> can reject this null
