@@ -4,7 +4,7 @@ Title: Testing for a Difference in Means of a Single Feature After Clustering
 Version: 0.1.0
 Authors@R: c(person("Yiqun", "Chen", email = "yiqunc@stanford.edu",
   role = c("aut", "cre")),person("Lucy", "Gao", email = "lucy.gao@stat.ubc.ca",
-  role = c("aut", "cre")))
+  role = c("aut")))
 Description: Implements a test for a difference in single feature means between clusters of observations identified via hierarchical or k-means clustering, as described in Chen and Gao (2023+).
 License: MIT + file LICENSE
 Encoding: UTF-8
