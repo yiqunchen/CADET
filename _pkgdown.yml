@@ -1,7 +1,7 @@
 url: https://yiqunchen.github.io/CADET/
 navbar:
   structure:
-    left:  [home, articles, tutorials, example, reference]
+    left:  [home, articles, tutorials_k_means, tutorials_hier, example, reference]
     right: [github]
 
   components:
@@ -9,10 +9,14 @@ navbar:
       text: Technical details
       href: articles/technical_details.html
 
-    tutorials:
-      text: Software tutorials
+    tutorials_k_means:
+      text: Tutorials for K-means clustering
       href: articles/Tutorials.html
 
-    example:
-      text: Application to single-cell RNA-seq data
-      href: articles/real_data_example.html
+    tutorials_hier:
+      text: Tutorials for hierarchical clustering
+      href: articles/Tutorials_hier.html
+
+#    example:
+#      text: Application to single-cell RNA-seq data
+#      href: articles/real_data_example.html

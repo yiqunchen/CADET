@@ -1,8 +1,8 @@
 ---
-title: "Software tutorials"
+title: "Tutorials for k-means clustering inference"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{Software tutorials}
+  %\VignetteIndexEntry{Tutorials for k-means clustering inference}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
@@ -14,7 +14,8 @@ knitr::opts_chunk$set(
 )
 ```
 
-In this tutorial, we demonstrate basic use of the `CADET` package. 
+In this tutorial, we demonstrate basic use of the `CADET` package for testing for a 
+difference in feature means between clusters obtained via k-means clustering. 
 
 First we load relevant packages:
 ```{r}
@@ -22,7 +23,7 @@ library(CADET)
 library(ggplot2)
 ```
 
-We first generate data according to $\mathbf{X} \sim \mathcal{MN}_{n\times q}(\boldsymbol{\mu}, \textbf{I}_n, \sigma^2 \textbf{I}_q)$ with $n=150,q=2,\sigma=1,$ and 
+We first generate data according to $\mathbf{X} \sim {MN}_{n\times q}(\boldsymbol{\mu}, \textbf{I}_n, \sigma^2 \textbf{I}_q)$ with $n=150,q=2,\sigma=1,$ and 
 \begin{align}
 \label{eq:power_model}
 \boldsymbol{\mu}_1 =\ldots = \boldsymbol{\mu}_{50} = \begin{bmatrix}
@@ -34,7 +35,7 @@ We first generate data according to $\mathbf{X} \sim \mathcal{MN}_{n\times q}(\b
 \delta/2 \\ 0_{q-1}
 \end{bmatrix}.
 \end{align}
-Here, we can think of $\mathcal{C}_1 = \{1,\ldots,50\},\mathcal{C}_2 = \{51,\ldots,100\},\mathcal{C}_3 = \{101,\ldots,150\}$ as the ``true clusters''.
+Here, we can think of ${C}_1 = \{1,\ldots,50\},{C}_2 = \{51,\ldots,100\},{C}_3 = \{101,\ldots,150\}$ as the "true clusters".
 In the figure below, we display one such simulation $\mathbf{x}\in\mathbb{R}^{100\times 2}$ with $\delta=10$. 
 
 ```{r fig.align="center",  fig.height = 5, fig.width = 5}
@@ -80,24 +81,24 @@ base_r_estimated_clusters <- kmeans(x=X, centers=k,iter.max = 20, algorithm = "L
 table(estimated_clusters, base_r_estimated_clusters)
 ```
 
-### Inference for k-means clustering (K=3)
+### Inference for a single feature mean after k-means clustering 
 
-In this section, we demonstrate how to use our software to obtain $p$-values for testing for a difference in the means of a single feature between a pair of clusters identified via $k$-means clustering. As an example, consider testing for a difference in the first feature (x axis) between the blue cluster (labeled as 1 in `estimated_clusters`) and the pink cluster (labeled as 3 in `estimated_clusters`). 
+In this section, we demonstrate how to use our software to obtain $p$-values for testing for a difference in the means of a single feature between a pair of clusters identified via $k$-means clustering. As an example, consider testing for a difference in the first feature (x axis) between the orange cluster (labeled as 2 in `estimated_clusters`) and the pink cluster (labeled as 3 in `estimated_clusters`). 
 
 The code below demonstrates how to use the function `kmeans_inference_1f`, which performs inference on the specified two estimated clusters. After obtaining the inferential result, we call the summary method to get a summary of the results, in the form of a data frame.
 
 ```{r fig.align="center",  fig.height = 4, fig.width = 5}
-cluster_1 <- 1
+cluster_1 <- 2
 cluster_2 <- 3
-cl_1_2_inference_demo <- kmeans_inference_1f(X, k=3, 1, 2,
+cl_inference_demo <- kmeans_inference_1f(X, k=3, cluster_1, cluster_2,
                                       feat=1, iso=TRUE,
                                       sig=sig,
                                       covMat=NULL, seed=2021,
                                       iter.max = 30)
-summary(cl_1_2_inference_demo)
+summary(cl_inference_demo)
 ```
 
-In the summary, we have the $\ell_2$ norm of the difference in means, i.e.,$\left\Vert \sum_{i\in {\hat{\mathcal{C}}}_1}\mathbf{x}_i/|\hat{\mathcal{C}}_1| - \sum_{i\in \hat{\mathcal{C}}_2}\mathbf{x}_i/|\hat{\mathcal{C}}_2| \right\Vert_2$  (`test_stats`), the Wald p-value (`p_naive`), and the selective $p$-value (`p_kmeans`). In this case, the test based on $p_{\text{selective}}$ can easily reject this null hypothesis that the blue and pink clusters have the same mean ($p_{\text{selective}}<0.001$).
+In the summary, we have the empirical difference in means of the second feature between the two clusters, i.e.,$\sum_{i\in {\hat{{G}}}}\mathbf{x}_{i,2}/|\hat{{G}}| - \sum_{i\in \hat{G}'}\mathbf{x}_{i,2}/|\hat{G}'|$  (`test_stats`), the naive p-value based on a z-test (`p_naive`), and the selective $p$-value (`p_selective`). In this case, the test based on $p_{\text{selective}}$ can reject this null hypothesis that the blue and pink clusters have the same mean in the first feature ($p_{2,\text{selective}}<0.001$).
 
 ### Inference for k-means clustering when the null hypothesis holds
 
@@ -115,13 +116,13 @@ ggplot(data.frame(X), aes(x=X1, y=X2, col=as.factor(new_estimated_clusters))) +
 table(true_clusters,new_estimated_clusters)
 ```
 
-By inspection, we see that the blue clusters (labeled as cluster 1) and the grey clusters (labeled as cluster 4) have the same mean. Now $p_{\text{selective}}$ yields a much more moderate $p$-value, and the test based on $p_{\text{selective}}$ cannot reject the null hypothesis when it holds. By contrast, the Wald $p$-value is tiny and leads to an anti-conservative test.
+By inspection, we see that the blue clusters (labeled as cluster 1) and the grey clusters (labeled as cluster 4) have the same mean. Now the selective $p$-value yields a much more moderate $p$-value, and the test based on it cannot reject the null hypothesis when it holds. By contrast, the naive $p$-value is tiny and leads to an anti-conservative test.
 
 ```{r fig.align="center",  fig.height = 4, fig.width = 5}
 cluster_1 <- 1
 cluster_2 <- 4
 cl_1_4_inference_demo <- kmeans_inference_1f(X, k=4, cluster_1, cluster_2,
-                                      feat=1, iso=TRUE,
+                                      feat=2, iso=TRUE,
                                       sig=sig, covMat=NULL, seed=2021)
 summary(cl_1_4_inference_demo)
 ```

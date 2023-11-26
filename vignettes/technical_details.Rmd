@@ -19,80 +19,74 @@ knitr::opts_chunk$set(
 <center>
 
 ![](../man/figures/fig_1.png){width=90%}
-<figcaption>Figure 1: We simulated one dataset according to $\mathcal{MN}_{100\times 10}(\textbf{\mu}, \textbf{I}_{100}, \Sigma)$, where $\mu_i = (1,0_9)^T$ for $i=1,\ldots, 50$ and $\mu_i = (0_9,1)^T$ for $i=51,\ldots, 100$, and $\Sigma_{ij} = 1\{i=j\}+0.4\cdot 1\{i\neq j\}$. *(a)*:  Empirical distribution of feature 2 based on the simulated data set. In this case, all observations have the same mean for feature 2. *(b)*: We apply k-means clustering to obtain two clusters and plot the empirical distribution of feature 2 stratified by the clusters. *(c)*: Quantile-quantile plot of naive z-test (black) our proposed p-values (orange) applied to the simulated data sets for testing the null hypotheses for a difference in means for features 2--8. </figcaption>
+<figcaption>Figure 1: We simulated one dataset according to ${MN}_{100\times 10}(\mu, \textbf{I}_{100}, \Sigma)$, where $\mu_i = (1,0_9)^T$ for $i=1,\ldots, 50$ and $\mu_i = (0_9,1)^T$ for $i=51,\ldots, 100$, and $\Sigma_{ij} = 1\{i=j\}+0.4\cdot 1\{i\neq j\}$. *(a)*:  Empirical distribution of feature 2 based on the simulated data set. In this case, all observations have the same mean for feature 2. *(b)*: We apply k-means clustering to obtain two clusters and plot the empirical distribution of feature 2 stratified by the clusters. *(c)*: Quantile-quantile plot of naive z-test (black) our proposed p-values (orange) applied to the simulated data sets for testing the null hypotheses for a difference in means for features 2--8. </figcaption>
 </center>
 
 
 ### Overview
 
-We consider the problem of testing for a difference in means between clusters of observations identified via $k$-means clustering, an extremely popular clustering algorithm with numerous applications. In this setting, classical hypothesis tests lead to an inflated Type I error rate, because the clusters were obtained on the same data used for testing. To overcome this problem, we propose a selective inference approach in our manuscript and describe an efficient algorithm to compute a finite-sample p-value that controls the selective Type I error for a test of the difference in means between a pair of clusters obtained using $k$-means clustering. 
+This package, as well as its underlying methodology, is motivated by the practical need to interpret and validate groups of observations obtained via clustering. In this case, a common validation approach involves testing differences in feature means between observations in two estimated clusters. However, classical hypothesis tests lead to an inflated Type I error rate, because the p-values are computed using the same set of data used for generating the hypothesis.
 
-In this tutorial, we provide an overview of our selective inference approach. Details for the computationally-efficient implementation of our proposed p-value can be found in Section 3 of our manuscript, available at arXiv_link_here. 
+To overcome this problem, we propose a new test for the difference in means in a single feature between a pair of clusters obtained using hierarchical or k-means clustering. More details can be found in our manuscript (Chen and Gao, 2023+).
+
+In this tutorial, we provide an overview of our selective inference approach. Details for the computationally-efficient implementation of our proposed p-value can be found in Sections 3 and 4 of our manuscript, available at arXiv_link_here. 
 
 ### Model setup
-We consider the following simple and well-studied model for $n$ observations and $q$ features:
-$$\mathbf{X} \sim \mathcal{MN}_{n\times q}(\boldsymbol{\mu}, \textbf{I}_n, \sigma^2 \textbf{I}_q),$$
-where $\boldsymbol{\mu} \in \mathbb{R}^{n\times q}$ has unknown rows $\boldsymbol{\mu}_i$, and $\sigma^2 > 0$ is unknown. This is equivalent to positing that $X_i\sim_{ind.} \mathcal{N}(\boldsymbol{\mu}_i,\sigma^2 \textbf{I}_q)$. In addition, we use $\mathbf{x}$ to denote a realization of the data generating model $\mathbf{X}$.
+Let $x \in \mathbb{R}^{n \times q}$ be a data matrix with $n$ observations of $q$ features that we want to perform clustering on. For $\mu \in \mathbb{R}^{n \times q}$ with unknown rows $\mu_i \in \mathbb{R}^q$ and known, positive-definite $\Sigma \in \mathbb{R}^{q \times q}$, we assume that $x$ is a realization of a random matrix $X$, where rows of $X$ are independent and drawn from a multivariate normal distribution:
+\begin{equation} 
+X_i \sim N_q(\mu_i, \Sigma), \quad i = 1, 2, \ldots, n. 
+\end{equation} 
 
-### k-means clustering
-Given samples $x_1,\ldots,x_n \in \mathbb{R}^q$, and a positive integer $K$, $k$-means clustering partitions the $n$ samples into disjoint subsets $\hat{\mathcal{C}}_1,\ldots,\hat{\mathcal{C}}_K$  by solving the following optimization problem:
-\begin{align}
-&\underset{\mathcal{C}_1,\ldots,\mathcal{C}_K}{\text{minimize}}\;\left\{ \sum_{k=1}^K \sum_{i \in \mathcal{C}_k} \left\Vert x_i -  \frac{\sum_{i \in \mathcal{C}_k} x_i}{|\mathcal{C}_k|}  \right\Vert_2^2 \right\} \\
-  &\text{subject to} \;
- \bigcup_{k=1}^K \mathcal{C}_k = \{1,\ldots, n\},\mathcal{C}_k\cap \mathcal{C}_{k'} = \emptyset ,\forall k\neq k'.
-\end{align}
-It is not typically possible to solve for the global optimum for this optimization problem. In practice, a number of algorithms are available to find a local optimum; one popular approach is Lloyd's algorithm. We first sample K out of n observations as initial centroids (step 1 in Algorithm 1). We then assign each observation to the closest centroid (step 2 in Algorithm 1). Next, we iterate between re-computing the centroids and updating the cluster assignments (steps 3a. and 3b. in Algorithm 1) until the cluster assignments stop changing. The algorithm is guaranteed to converge to a local optimum. 
+### Inference for the difference in means of a single feature between two estimated clusters
+Let  ${C}(\cdot)$ be a clustering algorithm that takes in a data matrix $x$ with $n$ rows and outputs a partition of $\{1,2, \ldots, n\}$ (e.g., hierarchical or $k$-means clustering). Suppose that we now want to use $x$ to test the null hypothesis that there is no difference in the mean of the $j$th feature across two groups obtained by applying ${C}(\cdot)$ to $x$, i.e., 
+\begin{equation} 
+\hat{H}_{0j}: \bar{\mu}_{\hat{G} j } =  \bar{\mu}_{\hat{G}' j } \text{ versus } \hat{H}_{1j}: \bar{\mu}_{\hat{G} j } =  \bar{\mu}_{\hat{G}' j }.
+\end{equation}
+Here, $\hat G, \hat G' \in {C}(x)$ are a pair of estimated clusters. This is equivalent to testing $\hat{H}_{0j}: [\mu^T \hat \nu]_j = 0$ versus $\hat{H}_{1j}: [\mu^T \hat{\nu}]_j \neq 0$, where $\hat{\nu$} is the $n$-vector with $i$th element given by 
+\begin{equation} 
+[\hat{\nu}]_i = {1} \{i \in \hat{G}\}/|\hat{G}| - {1} \{i \in \hat{G}'\}/|\hat{G}'|.
+\end{equation} 
 
-<center>
-![](../man/figures/screenshot_lloyds.png){width=90%}
-</center>
-
-### Inference for the difference in means between two estimated clusters
-After applying the $k$-means clustering algorithm to obtain $\mathcal{C}(x)$, a partition of the samples $\{1,\ldots,n\}$, we might then consider testing the null hypothesis that the true mean is the same across two *estimated* clusters, i.e.,
-$$   H_0: \sum_{i\in {\hat{\mathcal{C}}}_1}\boldsymbol{\mu}_i/|\hat{\mathcal{C}}_1| = \sum_{i\in \hat{\mathcal{C}}_2}\boldsymbol{\mu}_i/|\hat{\mathcal{C}}_2|   \mbox{ versus }  H_1: \sum_{i\in \hat{\mathcal{C}}_1}\boldsymbol{\mu}_i/|\hat{\mathcal{C}}_1| \neq \sum_{i\in \hat{\mathcal{C}}_2}\boldsymbol{\mu}_i/|\hat{\mathcal{C}}_2|,
-$$
-where $\hat{\mathcal{C}}_1,\hat{\mathcal{C}}_2 \in \mathcal{C}(\mathbf{x})$ are estimated clusters with cardinalities $|\hat{\mathcal{C}}_1|$ and $|\hat{\mathcal{C}}_2|$. This is equivalent to testing
- $H_0: \boldsymbol{\mu}^\top \nu = {0}_q  \mbox{ versus }  H_1: \boldsymbol{\mu}^\top \nu \neq {0}_q$,  where
-\begin{align}
-    \nu_i = 1\{i\in\hat{\mathcal{C}}_1\}/|\hat{\mathcal{C}}_1| - 1\{i\in\hat{\mathcal{C}}_2\}/|\hat{\mathcal{C}}_2|, \quad i = 1,\ldots, n,
-\end{align}
-and $1\{A\}$ is an indicator function that equals to 1 if the event $A$ holds, and 0 otherwise.
-
-This results in a challenging problem because we need to account for the clustering process that led us to test this very hypothesis! Drawing from the selective inference literature, we tackle this problem by proposing the following $p$-value: 
+This results in a challenging problem because we need to account for the clustering process that led us to test this hypothesis! Drawing from the selective inference literature, we tackle this problem by proposing the following $p$-value: 
 \begin{align} 
- p_{\text{selective}} = \mathbb{P}_{H_0}\left( \Vert \mathbf{X}^{\top}\nu \Vert_2 \geq  \Vert \mathbf{x}^{\top}\nu  \Vert_2 \;\middle\vert\;   \bigcap_{t=0}^{T}\bigcap_{i=1}^{n}\left\{c_i^{(t)}\left(\mathbf{X}\right) = c_i^{(t)}\left(\mathbf{x}\right)\right\},\,\boldsymbol{\Pi}_{\nu}^\perp \mathbf{X} = \boldsymbol{\Pi}_{\nu}^\perp \mathbf{x},\, \text{dir}(\mathbf{X}^{\top}\nu) =  \text{dir}(\mathbf{x}^{\top}\nu)\right),
-\end{align} 
-where $c_i^{(t)}\left(\mathbf{X}\right)$ is the cluster assigned to the $i$th observation at the $t$th iteration of Algorithm 1 and $\boldsymbol{\Pi}_{\nu}^{\perp}$ is an orthogonal projection matrix used to eliminate nuisance parameters. For a non-zero vector $w$, $\text{dir}(w) = w/\Vert w\Vert_2$ is the unit vector along the direction of $w$. 
-We show that this $p$-value for testing $H_0$ can be written as 
-$$
-p_{\text{selective}} = \mathbb{P}\left(  \phi \geq \Vert\mathbf{x}^\top \nu \Vert_2 \;\middle\vert\; \bigcap_{t=0}^{T}\bigcap_{i=1}^{n} \left\{c_i^{(t)}\left(\mathbf{x}'(\phi)\right) = c_i^{(t)}\left(\mathbf{x}\right)\right\}   \right),
-$$
-where $\phi\sim (\sigma\Vert\nu\Vert_2)\cdot\chi_q$ is a scaled $\chi$ distribution with degrees of freedom $q$, and  $\mathbf{x}'(\phi) =  x + \left( \frac{\phi-\Vert \mathbf{x}^{\top}\nu  \Vert_2 }{\Vert \nu  \Vert_2^2 }\right) \cdot \nu \left({\text{dir}}(\mathbf{x}^{\top}\nu)\right)^{\top}$ can be thought of as a perturbation of the observed data $x$, along the direction of $\mathbf{x}^{\top}\nu$.
+ \label{eq:selective} 
+ p_{j, \text{selective}}  = \mathbb{P}_{\hat{H}_{0j}} \Big (  \big |[X^T \hat{\nu}]_j \big | \geq \big |[x^T \hat{\nu}]_j  \big | ~ \Big |~ {C}(X) = {C}(x), U(X) = U(x) \Big ),
+\end{align}
+where 
+\begin{align} 
+U(x) = x - \frac{\hat{\nu} \Sigma_{j}^T [x^T \hat{\nu}]_j }{\|\hat{\nu}\|_2^2 \Sigma_{jj}}. \label{eq:defU}
+\end{align}
+In the definition of $p_{j, \text{selective}}$, we have conditioned on (i) the estimated clusters ${C}(x)$ to account for the data-driven nature of the null hypothesis; and (ii) $U(x)$ to eliminate the unknown nuisance parameters under the null. 
 
-Moreover, if we let $\mathcal{S}_T$ denote $\left\{ \phi\geq0: \bigcap_{t=0}^{T}\bigcap_{i=1}^{n} \left\{c_i^{(t)}\left(\mathbf{x}'(\phi)\right) = c_i^{(t)}\left(\mathbf{x}\right)\right\}   \right\}$, then $p_{\text{selective}}$ can be rewritten as $\mathbb{P}\left( \phi \geq \Vert\mathbf{x}^\top \nu \Vert_2 \;\middle\vert\; \phi\in \mathcal{S}_T  \right)$. Therefore, it suffices to characterize the set $\mathcal{S}_{T}$, because $\phi | \phi \in \mathcal{S}_{T}$ will follow a truncated $\chi_q$ distribution.
+We show that this $p$-value for testing $\hat{H}_{0j}$ can be written as 
+{\begin{align} 
+\begin{split}
+\label{eq:selective_cdf}
+p_{j, \text{selective}} = 1 - \mathbb{F} \left (\big | [\hat{\nu}^T x]_j \big | ; 0, \Sigma_{jj}\|\hat{\nu}\|_2^2; {\hat{S}}_j \right ) + \mathbb{F}\left (-\big | [\hat{\nu}^T x]_j \big | ; 0, \Sigma_{jj} \|\hat \nu\|_2^2;  {\hat{S}}_j \right ),
+\end{split}
+\end{align}} 
+where $\mathbb{F}(t; \mu, \sigma, {S})$ denotes the cumulative distribution function (CDF) of a $N(\mu, \sigma^2)$ random variable truncated to the set ${S}$, $x'(\phi,j) = x + (\phi - ( \bar{x}_{\hat{G}j} - \bar{x}_{\hat{G'}j})) \left ( \frac{ \hat{\nu} }{ \|\hat{\nu}\|_2^2 } \right ) \left ( \frac{\Sigma_j}{\Sigma_{jj}} \right )^T,$  and
+\begin{equation} 
+\hat S_j = 
+\left \{ \phi \in \mathbb{R}: C(x) = {C}\left(x'(\phi,j)\right ) \right \}. \label{eq:defS}
+\end{equation}.
 
-Our software implements an efficient calculation of this $p$-value by analytically characterizing the set $\mathcal{S}_T$. Our key insight is that the set $\mathcal{S}_T$ can be expressed as the intersection of solutions to $\mathcal{O}(nKT)$ quadratic inequalities of $\phi$, where $n,K,$ and $T$ are the number of observations, the number of estimated clusters, and the number of iterations of Algorithm 1, respectively. The test based on the resulting $p$-value will control the selective Type I error, in the sense of Lee et al. (2016) and Fithian et al. (2014); see also Figure 1(c) of this tutorial. Additional details can be found in Sections 2 and 3 of our paper (Chen and Witten 2022+)).
+While the notation in the last paragraph might seem daunting, the intuition is simple: since $p_{j, \text{selective}}$ can be rewritten into sums of CDFs of truncated univariate normal random variable evaluated at some given values, it suffices to characterize the truncation set $\hat S_j$.
 
-Remark: by contrast, the Wald $p$-value takes the form 
-$$
-p_{\text{Naive}} = \mathbb{P}(\Vert \mathbf{X}^{\top}\nu \Vert_2 \geq  \Vert \mathbf{x}^{\top}\nu  \Vert_2),
-$$
-which ignores the fact that the contrast vector $\nu$ is estimated from the data via $k$-means clustering, and therefore leads to a test with an inflated Type I error.
+We demonstrate how to compute $\hat S_j$ for hierarchical clustering (and a close variant of it for $k$-means clustering) in our manuscript, and our software implements an efficient calculation of this $p$-value by analytically characterizing the relevant sets. Our key insight is that the set $\hat S_j$ can be expressed as the intersection of solutions to a series of quadratic inequalities of $\phi$, leading to efficient and analytical characterization of the set, and consequently, the $p$-value. The test based on the resulting $p$-value will control the selective Type I error rate, in the sense of Lee et al. (2016) and Fithian et al. (2014); see also Figure 1(c) of this tutorial. Additional details can be found in Sections 3 and 4 of Chen and Gao (2023+).
 
-### Extensions
-Our software also allows for the following extensions:
-
-1. Allow for inference with unknown $\sigma$, i.e., where $\mathbf{X} \sim \mathcal{MN}_{n\times q}(\boldsymbol{\mu}, \textbf{I}_n, \sigma^2 \textbf{I}_q)$ with *unknown* $\sigma$.
-2. Allow for inference with a known, positive-definite covariance matrix $\boldsymbol{\Sigma}$, i.e., where $\mathbf{X} \sim \mathcal{MN}_{n\times q}(\boldsymbol{\mu}, \textbf{I}_n, \boldsymbol{\Sigma})$.
+Remark: by contrast, the naive $p$-value (used in a two-sample z-test) takes the form 
+\begin{equation} 
+p_{j, \text{naive}} = \mathbb{P}_{\hat{H}_{0j}} \left ( | [X^T \hat{\nu}^T]_j | \geq | [x^T \hat{\nu}]_j| \right ),
+\label{eq:naive}
+\end{equation} 
+which ignores the fact that the contrast vector $\nu$ is estimated from the data via clustering, and therefore leads to a test with an inflated Type I error rate.
 
 ### References
 
-Chen YT and Witten DM. (2022+) Selective inference for $k$-means clustering. arXiv preprint. https://arxiv.org/abs/2203.15267.
+Chen YT and Gao LL. (2023+) Testing for a difference in means of a single feature after clustering. arXiv preprint. 
 
 Fithian W, Sun D, Taylor J. (2014) Optimal Inference After Model Selection. arXiv:1410.2597 [mathST]. 
-
-Gao, L. L., Bien, J., and Witten, D. (2020). Selective inference for hierarchical clustering.
-arXiv:2012.02936.
 
 Lee J, Sun D, Sun Y, Taylor J. Exact post-selection inference, with application to the lasso. Ann Stat. 2016;44(3):907-927. doi:10.1214/15-AOS1371
 

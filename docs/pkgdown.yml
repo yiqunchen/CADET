@@ -3,8 +3,9 @@ pkgdown: 2.0.7
 pkgdown_sha: ~
 articles:
   Tutorials: Tutorials.html
+  Tutorials_hier: Tutorials_hier.html
   technical_details: technical_details.html
-last_built: 2023-11-25T23:54Z
+last_built: 2023-11-26T01:22Z
 urls:
   reference: https://yiqunchen.github.io/CADET/reference
   article: https://yiqunchen.github.io/CADET/articles
