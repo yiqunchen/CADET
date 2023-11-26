@@ -44,16 +44,21 @@ n <- 150
 true_clusters <- c(rep(1, 50), rep(2, 50), rep(3, 50))
 delta <- 10
 q <- 2
-mu <- rbind(c(delta/2,rep(0,q-1)), c(rep(0,q-1), sqrt(3)*delta/2), c(-delta/2,rep(0,q-1)) )
+mu <- rbind(c(delta / 2, rep(0, q - 1)), c(rep(0, q - 1), sqrt(3) * delta / 2), c(-delta / 2, rep(0, q - 1)))
 sig <- 1
-X <- matrix(rnorm(n*q, sd=sig), n, q) + mu[true_clusters, ]
+X <- matrix(rnorm(n * q, sd = sig), n, q) + mu[true_clusters, ]
 
-ggplot(data.frame(X), aes(x=X1, y=X2)) +
-  geom_point(cex=2) + xlab("Feature 1") + ylab("Feature 2") +
-  theme_classic(base_size=18) + theme(legend.position="none") +
-  scale_colour_manual(values=c("dodgerblue3", "rosybrown", "orange")) +
-  theme(legend.title = element_blank(),
-        plot.title = element_text(hjust = 0.5))
+ggplot(data.frame(X), aes(x = X1, y = X2)) +
+  geom_point(cex = 2) +
+  xlab("Feature 1") +
+  ylab("Feature 2") +
+  theme_classic(base_size = 18) +
+  theme(legend.position = "none") +
+  scale_colour_manual(values = c("dodgerblue3", "rosybrown", "orange")) +
+  theme(
+    legend.title = element_blank(),
+    plot.title = element_text(hjust = 0.5)
+  )
 ```
 
 ### Hierarchical clustering (K=3)
@@ -61,14 +66,19 @@ In the code below, we call the `hcl` function in the `fastclusters` package to e
 
 ```{r fig.align="center",  fig.height = 4, fig.width = 5}
 k <- 3
-hcl <- hclust(dist(X, method="euclidean")^2, method="average")
-estimated_clusters <- cutree(hcl,3)
-ggplot(data.frame(X), aes(x=X1, y=X2, col=as.factor(estimated_clusters))) +
-  geom_point(cex=2) + xlab("Feature 1") + ylab("Feature 2") +
-  theme_classic(base_size=18) + theme(legend.position="none") +
-  scale_colour_manual(values=c("dodgerblue3", "rosybrown", "orange")) +
-  theme(legend.title = element_blank(),
-        plot.title = element_text(hjust = 0.5))
+hcl <- hclust(dist(X, method = "euclidean")^2, method = "average")
+estimated_clusters <- cutree(hcl, 3)
+ggplot(data.frame(X), aes(x = X1, y = X2, col = as.factor(estimated_clusters))) +
+  geom_point(cex = 2) +
+  xlab("Feature 1") +
+  ylab("Feature 2") +
+  theme_classic(base_size = 18) +
+  theme(legend.position = "none") +
+  scale_colour_manual(values = c("dodgerblue3", "rosybrown", "orange")) +
+  theme(
+    legend.title = element_blank(),
+    plot.title = element_text(hjust = 0.5)
+  )
 ```
 
 ### Inference for a single feature mean after hierarchical clustering 
@@ -80,7 +90,7 @@ The code below demonstrates how to use the function `test_hier_clusters_exact_1f
 ```{r fig.align="center",  fig.height = 4, fig.width = 5}
 cluster_1 <- 1
 cluster_2 <- 3
-cl_inference_demo <- test_hier_clusters_exact_1f(X=X, link="average", hcl=hcl, K=3, k1=cluster_1, k2=cluster_2, feat=1)
+cl_inference_demo <- test_hier_clusters_exact_1f(X = X, link = "average", hcl = hcl, K = 3, k1 = cluster_1, k2 = cluster_2, feat = 1)
 summary(cl_inference_demo)
 ```
 
@@ -95,8 +105,10 @@ Now the selective $p$-value yields a much more moderate $p$-value, and the test 
 ```{r fig.align="center",  fig.height = 4, fig.width = 5}
 cluster_1 <- 1
 cluster_2 <- 3
-cl_inference_demo <-  test_hier_clusters_exact_1f(X=X, link="average",
-                                                      hcl=hcl, K=3, k1=cluster_1, k2=cluster_2, feat=2)
+cl_inference_demo <- test_hier_clusters_exact_1f(
+  X = X, link = "average",
+  hcl = hcl, K = 3, k1 = cluster_1, k2 = cluster_2, feat = 2
+)
 summary(cl_inference_demo)
 ```
 

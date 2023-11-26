@@ -44,16 +44,21 @@ n <- 150
 true_clusters <- c(rep(1, 50), rep(2, 50), rep(3, 50))
 delta <- 10
 q <- 2
-mu <- rbind(c(delta/2,rep(0,q-1)), c(rep(0,q-1), sqrt(3)*delta/2), c(-delta/2,rep(0,q-1)) )
+mu <- rbind(c(delta / 2, rep(0, q - 1)), c(rep(0, q - 1), sqrt(3) * delta / 2), c(-delta / 2, rep(0, q - 1)))
 sig <- 1
-X <- matrix(rnorm(n*q, sd=sig), n, q) + mu[true_clusters, ]
+X <- matrix(rnorm(n * q, sd = sig), n, q) + mu[true_clusters, ]
 
-ggplot(data.frame(X), aes(x=X1, y=X2)) +
-  geom_point(cex=2) + xlab("Feature 1") + ylab("Feature 2") +
-  theme_classic(base_size=18) + theme(legend.position="none") +
-  scale_colour_manual(values=c("dodgerblue3", "rosybrown", "orange")) +
-  theme(legend.title = element_blank(),
-        plot.title = element_text(hjust = 0.5))
+ggplot(data.frame(X), aes(x = X1, y = X2)) +
+  geom_point(cex = 2) +
+  xlab("Feature 1") +
+  ylab("Feature 2") +
+  theme_classic(base_size = 18) +
+  theme(legend.position = "none") +
+  scale_colour_manual(values = c("dodgerblue3", "rosybrown", "orange")) +
+  theme(
+    legend.title = element_blank(),
+    plot.title = element_text(hjust = 0.5)
+  )
 ```
 
 ### k-means clustering (K=3)
@@ -61,14 +66,19 @@ In the code below, we call the `kmeans_estimation` function to estimate clusters
 
 ```{r fig.align="center",  fig.height = 4, fig.width = 5}
 k <- 3
-estimated_clusters <- kmeans_estimation(X, k,iter.max = 20,seed = 2021)$final_cluster
-table(true_clusters,estimated_clusters)
-ggplot(data.frame(X), aes(x=X1, y=X2, col=as.factor(estimated_clusters))) +
-  geom_point(cex=2) + xlab("Feature 1") + ylab("Feature 2") +
-  theme_classic(base_size=18) + theme(legend.position="none") +
-  scale_colour_manual(values=c("dodgerblue3", "rosybrown", "orange")) +
-  theme(legend.title = element_blank(),
-        plot.title = element_text(hjust = 0.5))
+estimated_clusters <- kmeans_estimation(X, k, iter.max = 20, seed = 2021)$final_cluster
+table(true_clusters, estimated_clusters)
+ggplot(data.frame(X), aes(x = X1, y = X2, col = as.factor(estimated_clusters))) +
+  geom_point(cex = 2) +
+  xlab("Feature 1") +
+  ylab("Feature 2") +
+  theme_classic(base_size = 18) +
+  theme(legend.position = "none") +
+  scale_colour_manual(values = c("dodgerblue3", "rosybrown", "orange")) +
+  theme(
+    legend.title = element_blank(),
+    plot.title = element_text(hjust = 0.5)
+  )
 ```
 
 The `kmeans_estimation` function implements the Lloyd's algorithm for k-means clustering and  stores *all the intermediate clustering assignments*. The estimated clusters via `kmeans_estimation`, *as well as their orders*, agree with the those returned by the `kmeans` function in base `R` when specifying `algorithm = "Lloyd"`.
@@ -77,7 +87,7 @@ N.B.: the `kmeans` function in base `R` is implemented in Fortran and C, while o
 
 ```{r fig.align="center",  fig.height = 4, fig.width = 5}
 set.seed(2021)
-base_r_estimated_clusters <- kmeans(x=X, centers=k,iter.max = 20, algorithm = "Lloyd")$cluster
+base_r_estimated_clusters <- kmeans(x = X, centers = k, iter.max = 20, algorithm = "Lloyd")$cluster
 table(estimated_clusters, base_r_estimated_clusters)
 ```
 
@@ -90,11 +100,13 @@ The code below demonstrates how to use the function `kmeans_inference_1f`, which
 ```{r fig.align="center",  fig.height = 4, fig.width = 5}
 cluster_1 <- 2
 cluster_2 <- 3
-cl_inference_demo <- kmeans_inference_1f(X, k=3, cluster_1, cluster_2,
-                                      feat=1, iso=TRUE,
-                                      sig=sig,
-                                      covMat=NULL, seed=2021,
-                                      iter.max = 30)
+cl_inference_demo <- kmeans_inference_1f(X,
+  k = 3, cluster_1, cluster_2,
+  feat = 1, iso = TRUE,
+  sig = sig,
+  covMat = NULL, seed = 2021,
+  iter.max = 30
+)
 summary(cl_inference_demo)
 ```
 
@@ -107,13 +119,18 @@ In this section, we demonstrate that our proposed $p$-value yields reasonable re
 ```{r fig.align="center",  fig.height = 4, fig.width = 5}
 k_new <- 4
 new_estimated_clusters <- kmeans_estimation(X, k_new, iter.max = 20, seed = 2021)$final_cluster
-ggplot(data.frame(X), aes(x=X1, y=X2, col=as.factor(new_estimated_clusters))) +
-  geom_point(cex=2) + xlab("Feature 1") + ylab("Feature 2") +
-  theme_classic(base_size=18) + theme(legend.position="none") +
-  scale_colour_manual(values=c("dodgerblue3", "rosybrown", "orange","grey")) +
-  theme(legend.title = element_blank(),
-        plot.title = element_text(hjust = 0.5))
-table(true_clusters,new_estimated_clusters)
+ggplot(data.frame(X), aes(x = X1, y = X2, col = as.factor(new_estimated_clusters))) +
+  geom_point(cex = 2) +
+  xlab("Feature 1") +
+  ylab("Feature 2") +
+  theme_classic(base_size = 18) +
+  theme(legend.position = "none") +
+  scale_colour_manual(values = c("dodgerblue3", "rosybrown", "orange", "grey")) +
+  theme(
+    legend.title = element_blank(),
+    plot.title = element_text(hjust = 0.5)
+  )
+table(true_clusters, new_estimated_clusters)
 ```
 
 By inspection, we see that the blue clusters (labeled as cluster 1) and the grey clusters (labeled as cluster 4) have the same mean. Now the selective $p$-value yields a much more moderate $p$-value, and the test based on it cannot reject the null hypothesis when it holds. By contrast, the naive $p$-value is tiny and leads to an anti-conservative test.
@@ -121,9 +138,11 @@ By inspection, we see that the blue clusters (labeled as cluster 1) and the grey
 ```{r fig.align="center",  fig.height = 4, fig.width = 5}
 cluster_1 <- 1
 cluster_2 <- 4
-cl_1_4_inference_demo <- kmeans_inference_1f(X, k=4, cluster_1, cluster_2,
-                                      feat=2, iso=TRUE,
-                                      sig=sig, covMat=NULL, seed=2021)
+cl_1_4_inference_demo <- kmeans_inference_1f(X,
+  k = 4, cluster_1, cluster_2,
+  feat = 2, iso = TRUE,
+  sig = sig, covMat = NULL, seed = 2021
+)
 summary(cl_1_4_inference_demo)
 ```
 
