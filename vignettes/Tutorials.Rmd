@@ -23,7 +23,7 @@ library(CADET)
 library(ggplot2)
 ```
 
-We first generate data according to $\mathbf{X} \sim {MN}_{n\times q}(\boldsymbol{\mu}, \textbf{I}_n, \sigma^2 \textbf{I}_q)$ with $n=150,q=2,\sigma=1,$ and 
+We first generate data according to $\mathbf{X} \sim MN_{n\times q}(\boldsymbol{\mu}, \textbf{I}_n, \sigma^2 \textbf{I}_q)$ with $n=150,q=2,\sigma=1,$ and 
 \begin{align}
 \label{eq:power_model}
 \boldsymbol{\mu}_1 =\ldots = \boldsymbol{\mu}_{50} = \begin{bmatrix}
@@ -35,7 +35,7 @@ We first generate data according to $\mathbf{X} \sim {MN}_{n\times q}(\boldsymbo
 \delta/2 \\ 0_{q-1}
 \end{bmatrix}.
 \end{align}
-Here, we can think of ${C}_1 = \{1,\ldots,50\},{C}_2 = \{51,\ldots,100\},{C}_3 = \{101,\ldots,150\}$ as the "true clusters".
+Here, we can think of $C_1 = \{1,\ldots,50\},C_2 = \{51,\ldots,100\},C_3 = \{101,\ldots,150\}$ as the "true clusters".
 In the figure below, we display one such simulation $\mathbf{x}\in\mathbb{R}^{100\times 2}$ with $\delta=10$. 
 
 ```{r fig.align="center",  fig.height = 5, fig.width = 5}
@@ -98,7 +98,7 @@ cl_inference_demo <- kmeans_inference_1f(X, k=3, cluster_1, cluster_2,
 summary(cl_inference_demo)
 ```
 
-In the summary, we have the empirical difference in means of the second feature between the two clusters, i.e.,$\sum_{i\in {\hat{{G}}}}\mathbf{x}_{i,2}/|\hat{{G}}| - \sum_{i\in \hat{G}'}\mathbf{x}_{i,2}/|\hat{G}'|$  (`test_stats`), the naive p-value based on a z-test (`p_naive`), and the selective $p$-value (`p_selective`). In this case, the test based on $p_{\text{selective}}$ can reject this null hypothesis that the blue and pink clusters have the same mean in the first feature ($p_{2,\text{selective}}<0.001$).
+In the summary, we have the empirical difference in means of the second feature between the two clusters, i.e.,$\sum_{i\in \hat{G}}\mathbf{x}_{i,2}/|\hat{{G}}| - \sum_{i\in \hat{G}'}\mathbf{x}_{i,2}/|\hat{G}'|$  (`test_stats`), the naive p-value based on a z-test (`p_naive`), and the selective $p$-value (`p_selective`). In this case, the test based on $p_{\text{selective}}$ can reject this null hypothesis that the blue and pink clusters have the same mean in the first feature ($p_{2,\text{selective}}<0.001$).
 
 ### Inference for k-means clustering when the null hypothesis holds
 

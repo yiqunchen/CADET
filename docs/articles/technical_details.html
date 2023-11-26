@@ -78,7 +78,7 @@
     
 <center>
 <img src="../reference/figures/fig_1.png" style="width:90.0%"><figcaption>
-Figure 1: We simulated one dataset according to <span class="math inline">\({MN}_{100\times 10}(\mu, \textbf{I}_{100},
+Figure 1: We simulated one dataset according to <span class="math inline">\(MN_{100\times 10}(\mu, \textbf{I}_{100},
 \Sigma)\)</span>, where <span class="math inline">\(\mu_i =
 (1,0_9)^T\)</span> for <span class="math inline">\(i=1,\ldots,
 50\)</span> and <span class="math inline">\(\mu_i = (0_9,1)^T\)</span>
@@ -160,8 +160,8 @@ p_{j, \text{selective}}  = \mathbb{P}_{\hat{H}_{0j}} \Big (  \big |[X^T
 U(x) = x - \frac{\hat{\nu} \Sigma_{j}^T [x^T \hat{\nu}]_j
 }{\|\hat{\nu}\|_2^2 \Sigma_{jj}}. \label{eq:defU}
 \end{align}\]</span> In the definition of <span class="math inline">\(p_{j, \text{selective}}\)</span>, we have
-conditioned on (i) the estimated clusters <span class="math inline">\(\mathcal{C}(x)\)</span> to account for the
-data-driven nature of the null hypothesis; and (ii) <span class="math inline">\(U(x)\)</span> to eliminate the unknown nuisance
+conditioned on (i) the estimated clusters <span class="math inline">\({C}(x)\)</span> to account for the data-driven
+nature of the null hypothesis; and (ii) <span class="math inline">\(U(x)\)</span> to eliminate the unknown nuisance
 parameters under the null.</p>
 <p>We show that this <span class="math inline">\(p\)</span>-value for
 testing <span class="math inline">\(\hat{H}_{0j}\)</span> can be written
@@ -169,21 +169,22 @@ as {<span class="math display">\[\begin{align}
 \begin{split}
 \label{eq:selective_cdf}
 p_{j, \text{selective}} = 1 - \mathbb{F} \left (\big | [\hat{\nu}^T x]_j
-\big | ; 0, \Sigma_{jj}\|\hat{\nu}\|_2^2; \mathcal{\hat{S}}_j \right ) +
+\big | ; 0, \Sigma_{jj}\|\hat{\nu}\|_2^2; {\hat{S}}_j \right ) +
 \mathbb{F}\left (-\big | [\hat{\nu}^T x]_j \big | ; 0, \Sigma_{jj}
-\|\hat \nu\|_2^2;  \mathcal{\hat{S}}_j \right ),
+\|\hat \nu\|_2^2;  {\hat{S}}_j \right ),
 \end{split}
 \end{align}\]</span>} where <span class="math inline">\(\mathbb{F}(t;
-\mu, \sigma, \mathcal{S})\)</span> denotes the cumulative distribution
-function (CDF) of a <span class="math inline">\(N(\mu,
-\sigma^2)\)</span> random variable truncated to the set <span class="math inline">\(\mathcal{S}\)</span>, <span class="math inline">\(x'(\phi,j) = x + (\phi - ( \bar{x}_{\hat{G}j}
-- \bar{x}_{\hat{G'}j})) \left ( \frac{ \hat{\nu} }{
-\|\hat{\nu}\|_2^2 } \right ) \left ( \frac{\Sigma_j}{\Sigma_{jj}} \right
-)^T,\)</span> and {<span class="math display">\[\begin{equation}
+\mu, \sigma, {S})\)</span> denotes the cumulative distribution function
+(CDF) of a <span class="math inline">\(N(\mu, \sigma^2)\)</span> random
+variable truncated to the set <span class="math inline">\({S}\)</span>,
+<span class="math inline">\(x'(\phi,j) = x + (\phi - (
+\bar{x}_{\hat{G}j} - \bar{x}_{\hat{G'}j})) \left ( \frac{ \hat{\nu}
+}{ \|\hat{\nu}\|_2^2 } \right ) \left ( \frac{\Sigma_j}{\Sigma_{jj}}
+\right )^T,\)</span> and <span class="math display">\[\begin{equation}
 \hat S_j =
-\left \{ \phi \in \mathbb{R}: C(x) =
-\mathcal{C}\left(x'(\phi,j)\right ) \right \}. \label{eq:defS}
-\end{equation}\]</span> }.</p>
+\left \{ \phi \in \mathbb{R}: C(x) = {C}\left(x'(\phi,j)\right )
+\right \}. \label{eq:defS}
+\end{equation}\]</span>.</p>
 <p>While the notation in the last paragraph might seem daunting, the
 intuition is simple: since <span class="math inline">\(p_{j,
 \text{selective}}\)</span> can be rewritten into sums of CDFs of

@@ -156,10 +156,10 @@ the form of a data frame.</p>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">cluster_1</span> <span class="op">&lt;-</span> <span class="fl">1</span></span>
 <span><span class="va">cluster_2</span> <span class="op">&lt;-</span> <span class="fl">3</span></span>
-<span><span class="va">cl_1_2_inference_demo</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/test_hier_clusters_exact_1f.html">test_hier_clusters_exact_1f</a></span><span class="op">(</span>X<span class="op">=</span><span class="va">X</span>, link<span class="op">=</span><span class="st">"average"</span>, hcl<span class="op">=</span><span class="va">hcl</span>, K<span class="op">=</span><span class="fl">3</span>, k1<span class="op">=</span><span class="fl">1</span>, k2<span class="op">=</span><span class="fl">2</span>, feat<span class="op">=</span><span class="fl">1</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">cl_1_2_inference_demo</span><span class="op">)</span></span>
+<span><span class="va">cl_inference_demo</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/test_hier_clusters_exact_1f.html">test_hier_clusters_exact_1f</a></span><span class="op">(</span>X<span class="op">=</span><span class="va">X</span>, link<span class="op">=</span><span class="st">"average"</span>, hcl<span class="op">=</span><span class="va">hcl</span>, K<span class="op">=</span><span class="fl">3</span>, k1<span class="op">=</span><span class="va">cluster_1</span>, k2<span class="op">=</span><span class="va">cluster_2</span>, feat<span class="op">=</span><span class="fl">1</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">cl_inference_demo</span><span class="op">)</span></span>
 <span><span class="co">#&gt;   cluster_1 cluster_2 test_stat  p_selective      p_naive</span></span>
-<span><span class="co">#&gt; 1         1         2  4.464756 8.870985e-08 1.774197e-07</span></span></code></pre></div>
+<span><span class="co">#&gt; 1         1         3  9.910708 2.868783e-26 4.596766e-31</span></span></code></pre></div>
 <p>In the summary, we have the empirical difference in means of the
 first feature between the two clusters, i.e.,<span class="math inline">\(\sum_{i\in
 {\hat{{G}}}}\mathbf{x}_{i,2}/|\hat{{G}}| - \sum_{i\in
@@ -179,15 +179,17 @@ the null hypothesis does hold. Consider the same data and clustering
 assignment as before, there is no difference in means in the second
 feature between cluster 1 (grey cluster) and cluster 3 (blue
 cluster).</p>
-<p>Now <span class="math inline">\(p_{2,\text{selective}}\)</span>
-yields a much more moderate <span class="math inline">\(p\)</span>-value, and the test based on <span class="math inline">\(p_{2,\text{selective}}\)</span> cannot reject the
-null hypothesis when it holds. By contrast, the naive <span class="math inline">\(p\)</span>-value is tiny and leads to an
-anti-conservative test.</p>
+<p>Now the selective <span class="math inline">\(p\)</span>-value yields
+a much more moderate <span class="math inline">\(p\)</span>-value, and
+the test based on it cannot reject the null hypothesis when it holds. By
+contrast, the naive <span class="math inline">\(p\)</span>-value is tiny
+and leads to an anti-conservative test.</p>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">cluster_1</span> <span class="op">&lt;-</span> <span class="fl">1</span></span>
-<span><span class="va">cluster_2</span> <span class="op">&lt;-</span> <span class="fl">4</span></span>
-<span><span class="va">cl_1_2_inference_demo</span> <span class="op">&lt;-</span>  <span class="fu"><a href="../reference/test_hier_clusters_exact_1f.html">test_hier_clusters_exact_1f</a></span><span class="op">(</span>X<span class="op">=</span><span class="va">X</span>, link<span class="op">=</span><span class="st">"average"</span>, hcl<span class="op">=</span><span class="va">hcl</span>, K<span class="op">=</span><span class="fl">3</span>, k1<span class="op">=</span><span class="fl">1</span>, k2<span class="op">=</span><span class="fl">3</span>, feat<span class="op">=</span><span class="fl">2</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">cl_1_2_inference_demo</span><span class="op">)</span></span>
+<span><span class="va">cluster_2</span> <span class="op">&lt;-</span> <span class="fl">3</span></span>
+<span><span class="va">cl_inference_demo</span> <span class="op">&lt;-</span>  <span class="fu"><a href="../reference/test_hier_clusters_exact_1f.html">test_hier_clusters_exact_1f</a></span><span class="op">(</span>X<span class="op">=</span><span class="va">X</span>, link<span class="op">=</span><span class="st">"average"</span>,</span>
+<span>                                                      hcl<span class="op">=</span><span class="va">hcl</span>, K<span class="op">=</span><span class="fl">3</span>, k1<span class="op">=</span><span class="va">cluster_1</span>, k2<span class="op">=</span><span class="va">cluster_2</span>, feat<span class="op">=</span><span class="fl">2</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">cl_inference_demo</span><span class="op">)</span></span>
 <span><span class="co">#&gt;   cluster_1 cluster_2  test_stat p_selective   p_naive</span></span>
 <span><span class="co">#&gt; 1         1         3 -0.1766818   0.8362984 0.8362984</span></span></code></pre></div>
 </div>
